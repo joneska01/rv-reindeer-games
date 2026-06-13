@@ -6,7 +6,7 @@
  * Historical years (2023/24/25) are NOT seeded here — they are museum exhibits
  * served from /seed-data/*.json (display-only). See the v3.1 design doc §4.
  */
-import 'dotenv/config';
+import './load-env'; // must be first — populates process.env before @/lib/db loads
 import { db } from '@/lib/db';
 import { gameLibrary } from '@/db/schema';
 

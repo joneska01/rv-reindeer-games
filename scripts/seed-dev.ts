@@ -3,7 +3,7 @@
  * 21-game library. Idempotent: safe to re-run. Does NOT insert historical data.
  * Run: npm run seed:dev
  */
-import 'dotenv/config';
+import './load-env'; // must be first — populates process.env before @/lib/db loads
 import { db } from '@/lib/db';
 import { years, teams, games, gameLibrary } from '@/db/schema';
 import { eq } from 'drizzle-orm';
