@@ -1,11 +1,9 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '@/db/schema';
+import { resolveDatabaseUrl } from '@/lib/db-url';
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
-}
+const connectionString = resolveDatabaseUrl();
 
 // Singleton connection — prevents connection pool exhaustion in Next.js dev (hot reload)
 const globalForDb = globalThis as unknown as { _pgClient?: ReturnType<typeof postgres> };
