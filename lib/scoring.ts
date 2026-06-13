@@ -141,7 +141,7 @@ export function computeGameRankings(
   votes: CostumeVote[],
   teams: Team[],
 ): GameRankingResult {
-  let scoredTeams: ScoredTeam[] = [];
+  const scoredTeams: ScoredTeam[] = [];
   let anyProvisional = false;
 
   if (game.scoreSource === 'voting') {
@@ -189,7 +189,6 @@ export function computeLeaderboard(
   partyFouls: PartyFoul[],
 ): LeaderboardResult {
   const completedGames = games.filter((g) => g.isComplete);
-  const totalGames = games.length;
 
   return teams.map((team) => {
     let totalPoints = 0;
