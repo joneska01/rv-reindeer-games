@@ -319,7 +319,12 @@ export function GameManager({
           No games yet. Add from the library or build one from scratch.
         </p>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <DndContext
+          id="game-reorder"
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onDragEnd}
+        >
           <SortableContext items={items.map((g) => g.id)} strategy={verticalListSortingStrategy}>
             <ol className="space-y-2">
               {items.map((g, i) => (
