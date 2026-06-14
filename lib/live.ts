@@ -3,6 +3,12 @@ import { db } from '@/lib/db';
 import { teams, games, scores, partyFouls, costumeVotes } from '@/db/schema';
 import { eq, asc, inArray } from 'drizzle-orm';
 import type { Team, Game, Score, PartyFoul, CostumeVote } from '@/db/schema';
+import {
+  computeLeaderboard,
+  applyTieBreakers,
+  type LeaderboardResult,
+  type RankedTeam,
+} from '@/lib/scoring';
 
 export interface LiveData {
   teams: Team[];
@@ -28,4 +34,18 @@ export async function getLiveData(yearId: string): Promise<LiveData> {
     : [];
 
   return { teams: t, games: g, scores: s, fouls: f, votes: v };
+}
+
+export interface Standings {
+  leaderboard: LeaderboardResult;
+  ranked: RankedTeam[];
+}
+
+/** Run the single scoring engine over a LiveData snapshot. Shared by the
+ *  Live console and the Closing page so the math lives in exactly one place. */
+export function rankStandings(data: LiveData): Standings {
+  const { teams: t, games: g, scores: s, votes: v, fouls: f } = data;
+  const leaderboard = computeLeaderboard(g, s, v, t, f);
+  const ranked = applyTieBreakers(t, leaderboard, g, s, v);
+  return { leaderboard, ranked };
 }

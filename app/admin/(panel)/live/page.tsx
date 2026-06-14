@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { getActiveYear } from "@/lib/years";
-import { getLiveData } from "@/lib/live";
-import {
-  computeLeaderboard,
-  applyTieBreakers,
-  computeGameRankings,
-} from "@/lib/scoring";
+import { getLiveData, rankStandings } from "@/lib/live";
+import { computeGameRankings } from "@/lib/scoring";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Panel } from "@/components/shared/Panel";
 import { Badge } from "@/components/shared/Badge";
@@ -39,11 +35,11 @@ export default async function LivePage() {
     );
   }
 
-  const { teams, games, scores, fouls, votes } = await getLiveData(active.id);
+  const data = await getLiveData(active.id);
+  const { teams, games, scores, fouls, votes } = data;
 
   // Run the single engine: standings come from completed games minus fouls.
-  const leaderboard = computeLeaderboard(games, scores, votes, teams, fouls);
-  const ranked = applyTieBreakers(teams, leaderboard, games, scores, votes);
+  const { ranked } = rankStandings(data);
 
   const teamVMs: LiveTeamVM[] = teams.map((t) => ({
     id: t.id,
