@@ -1,6 +1,6 @@
 # RV Reindeer Games — CLAUDE.md
 
-Christmas-themed live scoring web app for an annual holiday party. Couples compete in games; a TV/projector shows a live scoreboard. Built with Next.js 16 App Router, Drizzle ORM, Vercel Postgres.
+Christmas-themed live scoring web app for an annual holiday party. Couples compete in games; a TV/projector shows a live scoreboard. Built with Next.js 16 App Router, Drizzle ORM, and Neon Postgres (via the Vercel Marketplace). Theme is "cheeky but classy" — an elegant holiday cocktail party, geared toward adults. See `docs/superpowers/specs/2026-06-13-rv-reindeer-v3.1-deltas-design.md` for decisions that refine PRD v3.
 
 ## Essential Commands
 
@@ -10,8 +10,8 @@ npm run build         # Production build
 npm run lint          # ESLint
 npx drizzle-kit generate   # Generate migration from schema changes
 npx drizzle-kit migrate    # Apply pending migrations
-npx tsx scripts/seed.ts    # Seed all historical years (idempotent)
-npx vitest                 # Run unit tests (scoring engine)
+npx tsx scripts/seed.ts    # Seed shared game library, idempotent (NOT historical years)
+npx vitest                 # Run unit tests (scoring engine + museum fixtures)
 ```
 
 ## Environment Variables
@@ -64,6 +64,6 @@ Test years have `is_test = true`. They show an amber warning badge everywhere in
 
 ## Seed Data
 
-Historical fixtures in `/seed-data/2023.json`, `2024.json`, `2025.json`. Excel file (`RV-Reindeer-Games.xlsx`) is the authoritative source for team names and raw scores. Run `npx tsx scripts/seed.ts` to seed. The script is idempotent.
+Historical years are **museum fixtures** in `/seed-data/2023.json`, `2024.json`, `2025.json` — display-only, served straight from JSON via `lib/historical.ts`, **not** seeded into the DB and **not** recomputed by the live engine. The source `RV-Reindeer-Games.xlsx` scored each year with different/inconsistent rules (2024 ignored fouls; 2025 dropped a game + scored costume ad-hoc), so totals are preserved verbatim. Each game carries `counted`; each foul carries `applied`. See the v3.1 design doc §4.
 
-**Scoring engine must pass unit tests for all three years before Phase 3 begins.**
+**Engine verification:** `lib/scoring.test.ts` proves the live engine against **2023** (the one rule-consistent year reproduces documented standings exactly) plus a synthetic suite covering every rule, and asserts museum-fixture integrity for all three years. Keep this green before building scoreboard/admin UI.
