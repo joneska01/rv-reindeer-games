@@ -148,4 +148,29 @@
   .animate-rise {
     animation: rv-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
+
+  @keyframes rv-confetti {
+    0% { transform: translateY(-12vh) rotate(0deg); opacity: 0; }
+    8% { opacity: 1; }
+    100% { transform: translateY(112vh) rotate(var(--confetti-spin, 540deg)); opacity: 0.9; }
+  }
+
+  @keyframes rv-pop {
+    0% { transform: translateY(18px) scale(0.96); opacity: 0; }
+    60% { transform: translateY(-3px) scale(1.02); }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .animate-pop {
+    animation: rv-pop 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes rv-glow {
+    0%, 100% { box-shadow: 0 0 36px -10px rgba(212, 175, 55, 0.5); }
+    50% { box-shadow: 0 0 56px -6px rgba(212, 175, 55, 0.85); }
+  }
+
+  .animate-glow {
+    animation: rv-glow 2.4s ease-in-out infinite;
+  }
 }
