@@ -46,7 +46,7 @@ export function StandingsBoard({
                 />
                 <span
                   className={cn(
-                    "flex-1 truncate font-body text-cream",
+                    "min-w-0 flex-1 truncate font-body text-cream",
                     dense ? "text-base" : "text-lg",
                     champ && "text-gilt",
                   )}

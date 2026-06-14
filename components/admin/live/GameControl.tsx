@@ -56,7 +56,7 @@ export function GameControl({
                 )}
               >
                 <span className="nums w-6 text-center text-sm text-sage/60">{i + 1}</span>
-                <span className="flex-1 font-body text-cream">{g.name}</span>
+                <span className="min-w-0 flex-1 truncate font-body text-cream">{g.name}</span>
                 <div className="flex flex-wrap items-center gap-1.5">
                   {g.scoreSource === "voting" && <Badge tone="cranberry">Voting</Badge>}
                   {g.numRounds === 2 && <Badge tone="neutral">2 rounds</Badge>}

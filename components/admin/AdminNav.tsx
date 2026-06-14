@@ -22,7 +22,7 @@ export function AdminNav() {
             key={l.href}
             href={l.href}
             className={cn(
-              "rounded-pill px-4 py-1.5 font-display text-xs uppercase tracking-[0.18em] transition-colors",
+              "shrink-0 whitespace-nowrap rounded-pill px-4 py-1.5 font-display text-xs uppercase tracking-[0.18em] transition-colors",
               active
                 ? "bg-gold/15 text-gold-soft"
                 : "text-cream/55 hover:bg-panel/60 hover:text-cream",

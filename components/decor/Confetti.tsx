@@ -1,9 +1,13 @@
 import { cn } from "@/lib/cn";
 
-/** Deterministic pseudo-random in [0,1) — keeps SSR and client identical. */
+/**
+ * Deterministic pseudo-random in [0,1). Rounded to 6 decimals so the tiny
+ * last-digit differences between Node's and the browser's `Math.sin` can't
+ * cause a hydration mismatch — every downstream +,−,× is then bit-identical.
+ */
 function seeded(i: number, salt: number): number {
   const x = Math.sin((i + 1) * 24.317 + salt * 13.7) * 91421.13;
-  return x - Math.floor(x);
+  return Math.round((x - Math.floor(x)) * 1e6) / 1e6;
 }
 
 const COLORS = ["#D4AF37", "#C41E3A", "#1A8B3A", "#F5EDD6", "#B8860B"];

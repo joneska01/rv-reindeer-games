@@ -45,17 +45,17 @@ export function StandingsPreview({
                   className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
                   style={{ backgroundColor: t?.color ?? "#888" }}
                 />
-                <span className="flex-1 truncate font-body text-cream">{t?.name ?? "—"}</span>
+                <span className="min-w-0 flex-1 truncate font-body text-cream">{t?.name ?? "—"}</span>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex shrink-0 items-center gap-1.5">
                   {s.isTied && !s.unresolvedTie && <Badge tone="neutral">Tied</Badge>}
-                  {s.unresolvedTie && <Badge tone="amber">Tie — resolve</Badge>}
+                  {s.unresolvedTie && <Badge tone="amber">Tie</Badge>}
                   {s.foulCount > 0 && (
                     <Badge tone="naughty">−{s.foulCount}</Badge>
                   )}
                 </div>
 
-                <span className="nums w-14 text-right text-sm text-sage/60">
+                <span className="nums w-12 shrink-0 text-right text-sm text-sage/60">
                   {s.gamesCompleted}/{gamesTotal}
                 </span>
                 <span className="nums w-12 text-right text-lg text-gilt">{s.totalPoints}</span>

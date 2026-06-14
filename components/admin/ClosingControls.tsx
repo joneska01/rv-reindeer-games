@@ -155,7 +155,7 @@ export function ClosingControls({
                   className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
                   style={{ backgroundColor: seat.color }}
                 />
-                <span className="flex-1 truncate font-body text-cream">{seat.name}</span>
+                <span className="min-w-0 flex-1 truncate font-body text-cream">{seat.name}</span>
                 {seat.isTied && <Badge tone="amber">Tie</Badge>}
                 <span className="nums text-lg text-gilt">{seat.totalPoints}</span>
               </div>

@@ -66,7 +66,7 @@ export function NowPlaying({
                   className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
                   style={{ backgroundColor: t?.color ?? "#888" }}
                 />
-                <span className="flex-1 truncate font-body text-cream">{t?.name ?? "—"}</span>
+                <span className="min-w-0 flex-1 truncate font-body text-cream">{t?.name ?? "—"}</span>
                 <span className="nums text-lg text-gilt">
                   {r.combinedScore}
                   <span className="ml-1 text-xs text-sage/60">

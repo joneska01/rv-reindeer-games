@@ -383,7 +383,7 @@ function SortableGameRow({
         </button>
       )}
       <span className="nums w-6 text-center text-sm text-sage/60">{index + 1}</span>
-      <span className="flex-1 font-body text-cream">{game.name}</span>
+      <span className="min-w-0 flex-1 truncate font-body text-cream">{game.name}</span>
       <div className="flex flex-wrap items-center gap-1.5">
         <Badge tone={game.scoreType === "low_wins" ? "sage" : "gold"}>
           {game.scoreType === "low_wins" ? "Low" : "High"}

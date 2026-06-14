@@ -59,7 +59,7 @@ export function CostumeMonitor({
                 className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
                 style={{ backgroundColor: color(row.teamId) }}
               />
-              <span className="flex-1 truncate font-body text-cream">{name(row.teamId)}</span>
+              <span className="min-w-0 flex-1 truncate font-body text-cream">{name(row.teamId)}</span>
               <span className="nums text-gilt">{row.points} pts</span>
             </div>
           ))

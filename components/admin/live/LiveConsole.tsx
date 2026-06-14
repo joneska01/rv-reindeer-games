@@ -42,9 +42,9 @@ export function LiveConsole({
     : [];
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2">
       {/* Left rail: pick what's live + assess fouls */}
-      <div className="space-y-6">
+      <div className="min-w-0 space-y-6">
         <GameControl
           yearId={yearId}
           games={games}
@@ -55,7 +55,7 @@ export function LiveConsole({
       </div>
 
       {/* Right rail: score the active game + watch the standings */}
-      <div className="space-y-6">
+      <div className="min-w-0 space-y-6">
         {activeGame ? (
           activeGame.scoreSource === "voting" ? (
             <CostumeMonitor game={activeGame} teams={teams} tally={voteTally} />

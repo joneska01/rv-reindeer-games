@@ -9,7 +9,7 @@ import { useApi, jsonInit } from "./useApi";
 import type { LiveGameVM, LiveTeamVM, LiveScoreVM } from "./types";
 
 const inputClass =
-  "h-10 w-24 rounded-card border border-gilt bg-forest-deep/60 px-3 text-right font-mono text-cream outline-none focus:border-gilt-strong placeholder:text-cream/25";
+  "h-10 w-20 sm:w-24 rounded-card border border-gilt bg-forest-deep/60 px-3 text-right font-mono text-cream outline-none focus:border-gilt-strong placeholder:text-cream/25";
 
 export function ScoreEntry({
   game,
@@ -89,7 +89,7 @@ export function ScoreEntry({
         <div className="flex items-center gap-3 px-3 text-xs uppercase tracking-wider text-sage/50">
           <span className="flex-1">Team</span>
           {rounds.map((r) => (
-            <span key={r} className="w-24 text-right">
+            <span key={r} className="w-20 text-right sm:w-24">
               {game.numRounds > 1 ? `Round ${r}` : "Score"}
             </span>
           ))}
@@ -104,7 +104,7 @@ export function ScoreEntry({
               className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
               style={{ backgroundColor: t.color }}
             />
-            <span className="flex-1 truncate font-body text-cream">{t.name}</span>
+            <span className="min-w-0 flex-1 truncate font-body text-cream">{t.name}</span>
             {rounds.map((r) => (
               <input
                 key={r}
