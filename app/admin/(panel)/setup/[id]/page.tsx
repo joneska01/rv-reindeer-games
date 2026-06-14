@@ -5,6 +5,7 @@ import { listTeams, listGames, listLibrary } from "@/lib/setup";
 import { Badge } from "@/components/shared/Badge";
 import { TeamManager, type TeamRow } from "@/components/admin/TeamManager";
 import { GameManager, type GameRow, type LibraryRow } from "@/components/admin/GameManager";
+import { ResetEditionButton } from "@/components/admin/ResetEditionButton";
 
 export default async function YearSetupPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -74,6 +75,8 @@ export default async function YearSetupPage({ params }: { params: Promise<{ id: 
         library={libraryRows}
         locked={year.isLocked}
       />
+
+      {year.isTest && <ResetEditionButton yearId={year.id} year={year.year} />}
     </div>
   );
 }
