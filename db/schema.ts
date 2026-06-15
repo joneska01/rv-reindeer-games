@@ -44,6 +44,9 @@ export const years = pgTable('years', {
   isActive: boolean('is_active').notNull().default(false),
   isLocked: boolean('is_locked').notNull().default(false),
   isTest: boolean('is_test').notNull().default(false),
+  // True once any game has been set active — flips the TV from the welcome
+  // screen to the live board, and never reverts (until a rehearsal reset).
+  hasStarted: boolean('has_started').notNull().default(false),
   activeGameId: uuid('active_game_id'), // FK to games — set after games table exists
   displayMode: displayModeEnum('display_mode').notNull().default('scoreboard'),
   podiumState: podiumStateEnum('podium_state').notNull().default('hidden'),

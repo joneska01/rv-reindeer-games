@@ -38,6 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           displayMode: 'scoreboard',
           podiumState: 'hidden',
           isLocked: false,
+          hasStarted: false,
         })
         .where(eq(years.id, id));
     });

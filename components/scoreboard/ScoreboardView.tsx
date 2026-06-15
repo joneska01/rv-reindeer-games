@@ -11,6 +11,7 @@ import { NowPlaying } from "./NowPlaying";
 import { PodiumStage } from "./PodiumStage";
 import { FinalResults } from "./FinalResults";
 import { IdleScreen } from "./IdleScreen";
+import { WelcomeScreen } from "./WelcomeScreen";
 import type { ScoreboardPayload } from "@/lib/scoreboard";
 
 export function ScoreboardView({
@@ -50,6 +51,15 @@ export function ScoreboardView({
     return (
       <Stage>
         <IdleScreen seed={tick} />
+      </Stage>
+    );
+  }
+
+  // Active edition, but no game has gone live yet → welcome screen.
+  if (!data.hasStarted) {
+    return (
+      <Stage>
+        <WelcomeScreen year={data.year} />
       </Stage>
     );
   }

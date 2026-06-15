@@ -1,0 +1,1 @@
+ALTER TABLE "years" ADD COLUMN "has_started" boolean DEFAULT false NOT NULL;
