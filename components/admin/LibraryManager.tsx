@@ -30,6 +30,27 @@ const EMPTY: Draft = {
   notes: "",
 };
 
+type ScoringKind = "count" | "timing" | "voting";
+
+function scoringKindOf(scoreType: string, scoreSource: string): ScoringKind {
+  if (scoreSource === "voting") return "voting";
+  return scoreType === "low_wins" ? "timing" : "count";
+}
+
+function applyScoringKind(
+  kind: ScoringKind,
+  currentUnit: string,
+): Pick<Draft, "scoreType" | "scoreSource" | "scoreUnit"> {
+  if (kind === "timing") {
+    return { scoreType: "low_wins", scoreSource: "manual", scoreUnit: "seconds" };
+  }
+  if (kind === "voting") {
+    return { scoreType: "high_wins", scoreSource: "voting", scoreUnit: "vote points" };
+  }
+  const keep = currentUnit && currentUnit !== "seconds" && currentUnit !== "vote points";
+  return { scoreType: "high_wins", scoreSource: "manual", scoreUnit: keep ? currentUnit : "points" };
+}
+
 const inputClass =
   "h-10 rounded-card border border-gilt bg-forest-deep/60 px-3 font-body text-cream outline-none focus:border-gilt-strong placeholder:text-cream/30";
 
@@ -98,6 +119,8 @@ export function LibraryManager({ entries }: { entries: LibraryEntry[] }) {
     await call(`/api/admin/library/${e.id}`, { method: "DELETE" });
   }
 
+  const kind = scoringKindOf(draft.scoreType, draft.scoreSource);
+
   return (
     <div className="space-y-4">
       {error && (
@@ -132,30 +155,27 @@ export function LibraryManager({ entries }: { entries: LibraryEntry[] }) {
                 value={draft.scoreUnit}
                 onChange={(e) => setDraft({ ...draft, scoreUnit: e.target.value })}
                 placeholder="Unit"
-                className={inputClass}
+                disabled={kind !== "count"}
+                className={cn(inputClass, kind !== "count" && "opacity-60")}
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <select
-                value={draft.scoreType}
-                onChange={(e) => setDraft({ ...draft, scoreType: e.target.value as Draft["scoreType"] })}
+                value={kind}
+                onChange={(e) =>
+                  setDraft({ ...draft, ...applyScoringKind(e.target.value as ScoringKind, draft.scoreUnit) })
+                }
                 className={inputClass}
               >
-                <option value="high_wins">High score wins</option>
-                <option value="low_wins">Low score wins</option>
-              </select>
-              <select
-                value={draft.scoreSource}
-                onChange={(e) => setDraft({ ...draft, scoreSource: e.target.value as Draft["scoreSource"] })}
-                className={inputClass}
-              >
-                <option value="manual">Manual</option>
-                <option value="voting">Voting</option>
+                <option value="count">Count — most wins</option>
+                <option value="timing">Timing — fastest (seconds)</option>
+                <option value="voting">Voting — costume ballot</option>
               </select>
               <select
                 value={draft.defaultNumRounds}
                 onChange={(e) => setDraft({ ...draft, defaultNumRounds: Number(e.target.value) })}
-                className={inputClass}
+                disabled={kind === "voting"}
+                className={cn(inputClass, kind === "voting" && "opacity-60")}
               >
                 <option value={1}>1 round</option>
                 <option value={2}>2 rounds</option>

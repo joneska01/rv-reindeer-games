@@ -6,6 +6,11 @@ import { cn } from "@/lib/cn";
 import { IDLE_LINES, pickLine } from "@/lib/copy";
 import type { SbTeam, SbActiveGame } from "@/lib/scoreboard";
 
+/** Whole numbers stay whole; timed scores show up to 2 decimals (no float noise). */
+function fmtScore(n: number): string {
+  return Number.isInteger(n) ? String(n) : String(Number(n.toFixed(2)));
+}
+
 export function NowPlaying({
   teams,
   game,
@@ -68,7 +73,7 @@ export function NowPlaying({
                 />
                 <span className="min-w-0 flex-1 truncate font-body text-cream">{t?.name ?? "—"}</span>
                 <span className="nums text-lg text-gilt">
-                  {r.combinedScore}
+                  {fmtScore(r.combinedScore)}
                   <span className="ml-1 text-xs text-sage/60">
                     {voting ? "pts" : game.scoreUnit}
                   </span>

@@ -65,6 +65,29 @@ const EMPTY: FormState = {
   roundCombineMethod: "sum",
 };
 
+// One friendly dropdown drives the underlying score type / source / unit.
+type ScoringKind = "count" | "timing" | "voting";
+
+function scoringKindOf(scoreType: string, scoreSource: string): ScoringKind {
+  if (scoreSource === "voting") return "voting";
+  return scoreType === "low_wins" ? "timing" : "count";
+}
+
+function applyScoringKind(
+  kind: ScoringKind,
+  currentUnit: string,
+): Pick<FormState, "scoreType" | "scoreSource" | "scoreUnit"> {
+  if (kind === "timing") {
+    return { scoreType: "low_wins", scoreSource: "manual", scoreUnit: "seconds" };
+  }
+  if (kind === "voting") {
+    return { scoreType: "high_wins", scoreSource: "voting", scoreUnit: "vote points" };
+  }
+  // count: most wins — keep any custom unit the host typed, else default.
+  const keep = currentUnit && currentUnit !== "seconds" && currentUnit !== "vote points";
+  return { scoreType: "high_wins", scoreSource: "manual", scoreUnit: keep ? currentUnit : "points" };
+}
+
 const inputClass =
   "h-10 rounded-card border border-gilt bg-forest-deep/60 px-3 font-body text-cream outline-none focus:border-gilt-strong placeholder:text-cream/30";
 
@@ -188,6 +211,8 @@ export function GameManager({
     });
   }
 
+  const kind = scoringKindOf(form.scoreType, form.scoreSource);
+
   return (
     <section className="space-y-4">
       <SectionHeading
@@ -236,12 +261,21 @@ export function GameManager({
                 placeholder="Game name"
                 className={inputClass}
               />
-              <input
-                value={form.scoreUnit}
-                onChange={(e) => setForm({ ...form, scoreUnit: e.target.value })}
-                placeholder="Unit (rings, seconds…)"
-                className={inputClass}
-              />
+              {kind === "count" ? (
+                <input
+                  value={form.scoreUnit}
+                  onChange={(e) => setForm({ ...form, scoreUnit: e.target.value })}
+                  placeholder="Unit (rings, points…)"
+                  className={inputClass}
+                />
+              ) : (
+                <input
+                  value={form.scoreUnit}
+                  disabled
+                  className={cn(inputClass, "opacity-60")}
+                  aria-label="Unit"
+                />
+              )}
             </div>
 
             <input
@@ -251,41 +285,35 @@ export function GameManager({
               className={cn(inputClass, "w-full")}
             />
 
-            <div className="grid gap-3 sm:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-3">
               <label className="flex flex-col gap-1.5">
-                <span className="eyebrow">Wins</span>
+                <span className="eyebrow">Scoring</span>
                 <select
-                  value={form.scoreType}
-                  onChange={(e) => setForm({ ...form, scoreType: e.target.value as FormState["scoreType"] })}
+                  value={kind}
+                  onChange={(e) =>
+                    setForm({ ...form, ...applyScoringKind(e.target.value as ScoringKind, form.scoreUnit) })
+                  }
                   className={inputClass}
                 >
-                  <option value="high_wins">High score</option>
-                  <option value="low_wins">Low score</option>
+                  <option value="count">Count — most wins</option>
+                  <option value="timing">Timing — fastest (seconds)</option>
+                  <option value="voting">Voting — costume ballot</option>
                 </select>
               </label>
-              <label className="flex flex-col gap-1.5">
-                <span className="eyebrow">Source</span>
-                <select
-                  value={form.scoreSource}
-                  onChange={(e) => setForm({ ...form, scoreSource: e.target.value as FormState["scoreSource"] })}
-                  className={inputClass}
-                >
-                  <option value="manual">Manual</option>
-                  <option value="voting">Voting</option>
-                </select>
-              </label>
-              <label className="flex flex-col gap-1.5">
-                <span className="eyebrow">Rounds</span>
-                <select
-                  value={form.numRounds}
-                  onChange={(e) => setForm({ ...form, numRounds: Number(e.target.value) })}
-                  className={inputClass}
-                >
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                </select>
-              </label>
-              {form.numRounds === 2 && (
+              {kind !== "voting" && (
+                <label className="flex flex-col gap-1.5">
+                  <span className="eyebrow">Rounds</span>
+                  <select
+                    value={form.numRounds}
+                    onChange={(e) => setForm({ ...form, numRounds: Number(e.target.value) })}
+                    className={inputClass}
+                  >
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                  </select>
+                </label>
+              )}
+              {kind !== "voting" && form.numRounds === 2 && (
                 <label className="flex flex-col gap-1.5">
                   <span className="eyebrow">Combine</span>
                   <select
