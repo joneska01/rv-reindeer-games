@@ -46,5 +46,6 @@ export interface StandingVM {
 export interface VoteTallyVM {
   votesCast: number;
   totalVoters: number;
+  votedTeamIds: string[];
   rows: { teamId: string; points: number; place: number }[];
 }

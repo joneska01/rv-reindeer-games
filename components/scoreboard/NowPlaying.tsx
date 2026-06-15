@@ -4,6 +4,7 @@ import { Medal } from "@/components/shared/Medal";
 import { Badge } from "@/components/shared/Badge";
 import { cn } from "@/lib/cn";
 import { IDLE_LINES, pickLine } from "@/lib/copy";
+import { IntermissionScene } from "@/components/decor/IntermissionScene";
 import type { SbTeam, SbActiveGame } from "@/lib/scoreboard";
 
 /** Whole numbers stay whole; timed scores show up to 2 decimals (no float noise). */
@@ -25,9 +26,12 @@ export function NowPlaying({
   if (!game) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-center">
-        <span className="mb-4 text-4xl">🥂</span>
-        <p className="eyebrow mb-2">Intermission</p>
-        <p className="max-w-xs font-body text-lg text-sage">{pickLine(IDLE_LINES, seed)}</p>
+        <span className="mb-4 text-6xl">🥂</span>
+        <p className="eyebrow mb-3 text-base">Intermission</p>
+        <p className="max-w-md font-body text-2xl leading-relaxed text-cream/90">
+          {pickLine(IDLE_LINES, seed)}
+        </p>
+        <IntermissionScene />
       </div>
     );
   }
@@ -82,6 +86,43 @@ export function NowPlaying({
             );
           })}
         </ol>
+      )}
+
+      {voting && teams.length > 0 && (
+        <div className="mt-5">
+          <p className="eyebrow mb-2">
+            Ballots In · {game.votedTeamIds.length}/{teams.length}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {[...teams]
+              .sort(
+                (a, b) =>
+                  Number(game.votedTeamIds.includes(a.id)) -
+                  Number(game.votedTeamIds.includes(b.id)),
+              )
+              .map((t) => {
+                const voted = game.votedTeamIds.includes(t.id);
+                return (
+                  <span
+                    key={t.id}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 font-body text-sm",
+                      voted
+                        ? "border-gold/40 bg-gold/10 text-gold-soft"
+                        : "border-amber/50 bg-amber/10 text-amber",
+                    )}
+                  >
+                    <span
+                      className="size-2.5 rounded-full ring-1 ring-cream/20"
+                      style={{ backgroundColor: t.color }}
+                    />
+                    {t.name}
+                    <span className="text-xs">{voted ? "✓" : "·"}</span>
+                  </span>
+                );
+              })}
+          </div>
+        </div>
       )}
     </div>
   );
