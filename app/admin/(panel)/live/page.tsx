@@ -83,12 +83,19 @@ export default async function LivePage() {
 
   // Costume tally — only meaningful when the active game is a voting game.
   const activeGame = games.find((g) => g.id === active.activeGameId) ?? null;
-  let voteTally: VoteTallyVM = { votesCast: 0, totalVoters: teams.length, rows: [] };
+  let voteTally: VoteTallyVM = {
+    votesCast: 0,
+    totalVoters: teams.length,
+    votedTeamIds: [],
+    rows: [],
+  };
   if (activeGame?.scoreSource === "voting") {
     const { rankings } = computeGameRankings(activeGame, scores, votes, teams);
+    const votedTeamIds = [...new Set(votes.map((v) => v.votingTeamId))];
     voteTally = {
-      votesCast: votes.length,
+      votesCast: votedTeamIds.length,
       totalVoters: teams.length,
+      votedTeamIds,
       rows: rankings.map((r) => ({
         teamId: r.teamId,
         points: r.combinedScore,

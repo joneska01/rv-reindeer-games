@@ -37,6 +37,8 @@ export interface SbActiveGame {
   numRounds: number;
   isProvisional: boolean;
   rankings: SbGameRank[];
+  /** For voting games: team ids that have cast a ballot. */
+  votedTeamIds: string[];
 }
 
 export interface ScoreboardPayload {
@@ -87,6 +89,10 @@ export async function buildScoreboard(): Promise<ScoreboardPayload> {
     : undefined;
   if (live) {
     const result = computeGameRankings(live, data.scores, data.votes, data.teams);
+    const votedTeamIds =
+      live.scoreSource === 'voting'
+        ? [...new Set(data.votes.map((v) => v.votingTeamId))]
+        : [];
     activeGame = {
       id: live.id,
       name: live.name,
@@ -101,6 +107,7 @@ export async function buildScoreboard(): Promise<ScoreboardPayload> {
         place: r.place,
         isProvisional: r.isProvisional,
       })),
+      votedTeamIds,
     };
   }
 

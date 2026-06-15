@@ -173,4 +173,23 @@
   .animate-glow {
     animation: rv-glow 2.4s ease-in-out infinite;
   }
+
+  @keyframes rv-sway {
+    0%, 100% { transform: rotate(-9deg); }
+    50% { transform: rotate(9deg); }
+  }
+
+  .animate-sway {
+    animation: rv-sway 3s ease-in-out infinite;
+    transform-origin: top center;
+  }
+
+  @keyframes rv-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-bob {
+    animation: rv-bob 2.6s ease-in-out infinite;
+  }
 }

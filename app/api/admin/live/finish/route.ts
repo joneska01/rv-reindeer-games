@@ -13,9 +13,10 @@ const schema = z.object({
 });
 
 /**
- * Close out (or reopen) an edition. Locking freezes all editing and flips the
- * TV to the final-results view; it requires at least one completed game so we
- * never lock an empty board. Reopening returns the display to the scoreboard.
+ * Close out (or reopen) an edition. Locking freezes all editing and drops the
+ * TV into the podium "curtain down" drumroll screen — NOT the final standings,
+ * so the host can run the podium reveal without spoiling it. Requires at least
+ * one completed game. Reopening returns the display to the scoreboard.
  */
 export async function POST(req: NextRequest) {
   return requireAdmin(req, async () => {
@@ -36,7 +37,12 @@ export async function POST(req: NextRequest) {
       }
       await db
         .update(years)
-        .set({ isLocked: true, displayMode: 'final_results', activeGameId: null })
+        .set({
+          isLocked: true,
+          displayMode: 'podium',
+          podiumState: 'hidden',
+          activeGameId: null,
+        })
         .where(eq(years.id, yearId));
     } else {
       await db

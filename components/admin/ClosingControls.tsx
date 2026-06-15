@@ -127,7 +127,7 @@ export function ClosingControls({
                 key={s.state}
                 size="sm"
                 variant={active ? "gold" : "ghost"}
-                disabled={busy || isLocked}
+                disabled={busy}
                 onClick={() => setPodium(s.state)}
               >
                 {s.label}
@@ -177,11 +177,13 @@ export function ClosingControls({
         />
         {isLocked ? (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-cream">
+            <p className="max-w-md text-sm text-cream">
               <Badge tone="cranberry" className="mr-2">
                 Locked
               </Badge>
-              Results are final and editing is frozen.
+              Scores are frozen and the TV is on the drumroll screen. Use{" "}
+              <span className="text-gold-soft">Podium Reveal</span> above to unveil 3rd → 2nd
+              → 1st.
             </p>
             <Button
               variant="ghost"
@@ -200,7 +202,7 @@ export function ClosingControls({
             <p className="max-w-md text-sm text-sage">
               {gamesComplete < gamesTotal
                 ? `${gamesTotal - gamesComplete} game${gamesTotal - gamesComplete === 1 ? "" : "s"} still open. You can finish now — only completed games count — or wrap them up first.`
-                : "Every game is in. Lock it to freeze the results and flip the TV to the final standings."}
+                : "Every game is in. Lock it to freeze the scores — the TV moves to a drumroll so you can run the podium reveal."}
             </p>
             <Button
               variant="cranberry"

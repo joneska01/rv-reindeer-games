@@ -4,6 +4,7 @@ import { Panel } from "@/components/shared/Panel";
 import { Badge } from "@/components/shared/Badge";
 import { Medal } from "@/components/shared/Medal";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { cn } from "@/lib/cn";
 import type { LiveGameVM, LiveTeamVM, VoteTallyVM } from "./types";
 
 export function CostumeMonitor({
@@ -20,6 +21,13 @@ export function CostumeMonitor({
   const pct = tally.totalVoters
     ? Math.round((tally.votesCast / tally.totalVoters) * 100)
     : 0;
+
+  const hasVoted = (id: string) => tally.votedTeamIds.includes(id);
+  const pending = teams.filter((t) => !hasVoted(t.id)).length;
+  // Couples who still need to vote come first so stragglers are obvious.
+  const roster = [...teams].sort(
+    (a, b) => Number(hasVoted(a.id)) - Number(hasVoted(b.id)),
+  );
 
   return (
     <Panel tone="soft" className="ring-1 ring-gold/40">
@@ -44,6 +52,43 @@ export function CostumeMonitor({
         for each ballot&rsquo;s 1st / 2nd / 3rd. &ldquo;Mark Done&rdquo; closes voting and
         folds the result into the standings.
       </p>
+
+      {/* Who's voted — chase down stragglers before closing voting */}
+      <div className="mt-4">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="eyebrow">Ballots In</p>
+          {pending > 0 ? (
+            <span className="text-xs text-amber">
+              {pending} still to vote
+            </span>
+          ) : (
+            <span className="text-xs text-gold-soft">All in ✓</span>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {roster.map((t) => {
+            const voted = hasVoted(t.id);
+            return (
+              <span
+                key={t.id}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 font-body text-sm",
+                  voted
+                    ? "border-gold/40 bg-gold/10 text-gold-soft"
+                    : "border-amber/50 bg-amber/10 text-amber",
+                )}
+              >
+                <span
+                  className="size-2.5 rounded-full ring-1 ring-cream/20"
+                  style={{ backgroundColor: t.color }}
+                />
+                {t.name}
+                <span className="text-xs">{voted ? "✓" : "·"}</span>
+              </span>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="mt-4 space-y-2">
         {tally.rows.length === 0 ? (
