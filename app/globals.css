@@ -193,12 +193,13 @@
     animation: rv-bob 2.6s ease-in-out infinite;
   }
 
-  @keyframes rv-fly {
-    0% { transform: translateX(-32vw); }
-    100% { transform: translateX(118vw); }
+  /* Right → left so the reindeer (which face left) lead and pull the sleigh. */
+  @keyframes rv-sleigh {
+    0% { transform: translateX(118vw); }
+    100% { transform: translateX(-40vw); }
   }
 
-  .animate-fly {
-    animation: rv-fly 14s linear infinite;
+  .animate-sleigh {
+    animation: rv-sleigh 14s linear infinite;
   }
 }
