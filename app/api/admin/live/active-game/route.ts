@@ -33,7 +33,12 @@ export async function POST(req: NextRequest) {
       if (g.isComplete) return fail('That game is already complete.', 409);
     }
 
-    await db.update(years).set({ activeGameId: gameId }).where(eq(years.id, yearId));
+    // Setting a game live marks the edition started (one-way until reset), so
+    // the scoreboard leaves the welcome screen for good.
+    await db
+      .update(years)
+      .set(gameId ? { activeGameId: gameId, hasStarted: true } : { activeGameId: null })
+      .where(eq(years.id, yearId));
     const updated = await getYear(yearId);
     return ok(updated);
   });

@@ -46,6 +46,7 @@ export interface ScoreboardPayload {
   year?: number;
   isTest?: boolean;
   locked?: boolean;
+  hasStarted?: boolean;
   displayMode?: 'scoreboard' | 'podium' | 'final_results';
   podiumState?: 'hidden' | 'show_third' | 'show_second' | 'show_first' | 'show_all';
   teams?: SbTeam[];
@@ -116,6 +117,7 @@ export async function buildScoreboard(): Promise<ScoreboardPayload> {
     year: year.year,
     isTest: year.isTest,
     locked: year.isLocked,
+    hasStarted: year.hasStarted,
     displayMode: year.displayMode,
     podiumState: year.podiumState,
     teams,

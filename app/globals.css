@@ -192,4 +192,13 @@
   .animate-bob {
     animation: rv-bob 2.6s ease-in-out infinite;
   }
+
+  @keyframes rv-fly {
+    0% { transform: translateX(-32vw); }
+    100% { transform: translateX(118vw); }
+  }
+
+  .animate-fly {
+    animation: rv-fly 14s linear infinite;
+  }
 }
