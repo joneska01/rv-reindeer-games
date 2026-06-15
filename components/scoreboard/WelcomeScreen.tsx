@@ -14,13 +14,14 @@ export function WelcomeScreen({ year }: { year?: number }) {
         ← Home
       </Link>
 
-      {/* Santa's team flies across the sky on a loop */}
+      {/* Santa's team flies across the sky on a loop (reindeer lead, sleigh trails) */}
       <div className="pointer-events-none absolute inset-x-0 top-[14%]">
-        <div className="animate-fly inline-flex items-end gap-1 whitespace-nowrap text-4xl">
+        <div className="animate-sleigh inline-flex items-end gap-1 whitespace-nowrap text-4xl">
           <span className="animate-bob" style={{ animationDelay: "0s" }}>🦌</span>
           <span className="animate-bob" style={{ animationDelay: "0.15s" }}>🦌</span>
           <span className="animate-bob" style={{ animationDelay: "0.3s" }}>🦌</span>
-          <span className="animate-bob text-5xl" style={{ animationDelay: "0.45s" }}>🛷</span>
+          <span className="animate-bob" style={{ animationDelay: "0.45s" }}>🦌</span>
+          <span className="animate-bob text-5xl" style={{ animationDelay: "0.6s" }}>🛷</span>
         </div>
       </div>
 

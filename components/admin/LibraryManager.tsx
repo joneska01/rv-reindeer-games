@@ -6,6 +6,12 @@ import { Panel } from "@/components/shared/Panel";
 import { Button } from "@/components/shared/Button";
 import { Badge } from "@/components/shared/Badge";
 import { cn } from "@/lib/cn";
+import {
+  scoringKindOf,
+  applyScoringKind,
+  SCORING_KIND_OPTIONS,
+  type ScoringKind,
+} from "@/lib/scoring-kinds";
 
 export interface LibraryEntry {
   id: string;
@@ -29,27 +35,6 @@ const EMPTY: Draft = {
   supplies: "",
   notes: "",
 };
-
-type ScoringKind = "count" | "timing" | "voting";
-
-function scoringKindOf(scoreType: string, scoreSource: string): ScoringKind {
-  if (scoreSource === "voting") return "voting";
-  return scoreType === "low_wins" ? "timing" : "count";
-}
-
-function applyScoringKind(
-  kind: ScoringKind,
-  currentUnit: string,
-): Pick<Draft, "scoreType" | "scoreSource" | "scoreUnit"> {
-  if (kind === "timing") {
-    return { scoreType: "low_wins", scoreSource: "manual", scoreUnit: "seconds" };
-  }
-  if (kind === "voting") {
-    return { scoreType: "high_wins", scoreSource: "voting", scoreUnit: "vote points" };
-  }
-  const keep = currentUnit && currentUnit !== "seconds" && currentUnit !== "vote points";
-  return { scoreType: "high_wins", scoreSource: "manual", scoreUnit: keep ? currentUnit : "points" };
-}
 
 const inputClass =
   "h-10 rounded-card border border-gilt bg-forest-deep/60 px-3 font-body text-cream outline-none focus:border-gilt-strong placeholder:text-cream/30";
@@ -167,9 +152,11 @@ export function LibraryManager({ entries }: { entries: LibraryEntry[] }) {
                 }
                 className={inputClass}
               >
-                <option value="count">Count — most wins</option>
-                <option value="timing">Timing — fastest (seconds)</option>
-                <option value="voting">Voting — costume ballot</option>
+                {SCORING_KIND_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
               </select>
               <select
                 value={draft.defaultNumRounds}
