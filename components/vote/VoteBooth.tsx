@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Panel } from "@/components/shared/Panel";
 import { Button } from "@/components/shared/Button";
 import { Badge } from "@/components/shared/Badge";
@@ -176,6 +177,12 @@ export function VoteBooth({
 function Shell({ children, year }: { children: React.ReactNode; year?: number }) {
   return (
     <main className="relative flex min-h-dvh items-center justify-center px-5 py-12">
+      <Link
+        href="/"
+        className="absolute left-5 top-6 font-display text-sm uppercase tracking-[0.18em] text-cream/40 transition-colors hover:text-gold-soft"
+      >
+        ← Home
+      </Link>
       <div className="w-full max-w-md">
         <Panel>{children}</Panel>
         {year && (

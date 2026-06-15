@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Snowfall } from "@/components/decor/Snowfall";
 import { Confetti } from "@/components/decor/Confetti";
 import { Panel } from "@/components/shared/Panel";
@@ -112,7 +113,14 @@ function Header({
 }) {
   return (
     <header className="mb-6 flex items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
+      <Link
+        href="/"
+        className="group flex items-center gap-3 opacity-80 transition-opacity hover:opacity-100"
+        title="Back to home"
+      >
+        <span className="font-display text-lg text-cream/40 transition-colors group-hover:text-gold-soft">
+          ←
+        </span>
         <div className="flex h-12 w-12 items-center justify-center rounded-full border border-gilt-strong bg-forest-deep/60">
           <span className="text-gilt font-display text-base tracking-[0.1em]">RV</span>
         </div>
@@ -120,7 +128,7 @@ function Header({
           <p className="eyebrow">Reindeer Games</p>
           <p className="text-gilt font-display text-xl leading-none">{year}</p>
         </div>
-      </div>
+      </Link>
       <div className="flex items-center gap-2">
         {isTest && <Badge tone="amber">Test</Badge>}
         <Badge tone="gold">

@@ -63,6 +63,8 @@ export function ScoreEntry({
   }
 
   const rounds = Array.from({ length: game.numRounds }, (_, i) => i + 1);
+  // Timing games (fastest wins) take seconds to the hundredth; counts are whole.
+  const isTiming = game.scoreType === "low_wins";
 
   return (
     <Panel tone="soft" className="ring-1 ring-gold/40">
@@ -71,8 +73,8 @@ export function ScoreEntry({
         title={game.name}
         trailing={
           <div className="flex items-center gap-1.5">
-            <Badge tone={game.scoreType === "low_wins" ? "sage" : "gold"}>
-              {game.scoreType === "low_wins" ? "Low wins" : "High wins"}
+            <Badge tone={isTiming ? "sage" : "gold"}>
+              {isTiming ? "Timing · fastest" : "Count · most"}
             </Badge>
             <span className="text-xs text-sage/60">{game.scoreUnit}</span>
           </div>
@@ -110,6 +112,8 @@ export function ScoreEntry({
                 key={r}
                 type="number"
                 inputMode="decimal"
+                step={isTiming ? "0.01" : "1"}
+                min="0"
                 value={valueOf(t.id, r)}
                 disabled={busy}
                 onChange={(e) =>
@@ -119,7 +123,7 @@ export function ScoreEntry({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") (e.target as HTMLInputElement).blur();
                 }}
-                placeholder="—"
+                placeholder={isTiming ? "0.00" : "—"}
                 className={cn(inputClass)}
                 aria-label={`${t.name} ${game.numRounds > 1 ? `round ${r}` : "score"}`}
               />
