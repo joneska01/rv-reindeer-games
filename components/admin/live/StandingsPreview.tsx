@@ -4,14 +4,15 @@ import { Panel } from "@/components/shared/Panel";
 import { Badge } from "@/components/shared/Badge";
 import { Medal } from "@/components/shared/Medal";
 import { SectionHeading } from "@/components/shared/SectionHeading";
-import type { LiveTeamVM, StandingVM } from "./types";
+import type { TeamVM, StandingVM } from "@/lib/view-models";
+import { TeamDot } from "@/components/shared/TeamDot";
 
 export function StandingsPreview({
   teams,
   standings,
   gamesTotal,
 }: {
-  teams: LiveTeamVM[];
+  teams: TeamVM[];
   standings: StandingVM[];
   gamesTotal: number;
 }) {
@@ -41,10 +42,7 @@ export function StandingsPreview({
                 <span className="flex w-8 justify-center">
                   <Medal rank={s.rank} />
                 </span>
-                <span
-                  className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
-                  style={{ backgroundColor: t?.color ?? "#888" }}
-                />
+                <TeamDot color={t?.color ?? "#888"} />
                 <span className="min-w-0 flex-1 truncate font-body text-cream">{t?.name ?? "—"}</span>
 
                 <div className="flex shrink-0 items-center gap-1.5">

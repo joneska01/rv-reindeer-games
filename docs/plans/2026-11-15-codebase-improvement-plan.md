@@ -175,6 +175,8 @@ add tests for the guard helpers' pure parts; replay the 9999 rehearsal.
 
 ## Phase 3 — Simplify the client
 
+> **Status: done** (branch `refactor/phase-3-client`). Deviations: 3.1 had already landed in Phase 1. `ScoringFields` became `ScoringKindSelect` (the two forms share the select and its mapping but have genuinely different layouts, and forcing one fieldset would have changed pixels). `shrink-0` is now applied to every `TeamDot` (it was missing on three). `TeamRow`/`GameRow`/`LibraryRow`/`LibraryEntry`/`Live*VM`/`Sb*`/`VoteTeam` were all replaced by the shared view-models.
+
 Pure refactor. Pixel-identical UI.
 
 | # | Change | Why |

@@ -5,15 +5,17 @@ import { Badge } from "@/components/shared/Badge";
 import { Medal } from "@/components/shared/Medal";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/cn";
-import type { LiveGameVM, LiveTeamVM, VoteTallyVM } from "./types";
+import type { GameVM, TeamVM } from "@/lib/view-models";
+import type { VoteTallyVM } from "./types";
+import { TeamDot } from "@/components/shared/TeamDot";
 
 export function CostumeMonitor({
   game,
   teams,
   tally,
 }: {
-  game: LiveGameVM;
-  teams: LiveTeamVM[];
+  game: GameVM;
+  teams: TeamVM[];
   tally: VoteTallyVM;
 }) {
   const name = (id: string) => teams.find((t) => t.id === id)?.name ?? "—";
@@ -78,10 +80,7 @@ export function CostumeMonitor({
                     : "border-amber/50 bg-amber/10 text-amber",
                 )}
               >
-                <span
-                  className="size-2.5 rounded-full ring-1 ring-cream/20"
-                  style={{ backgroundColor: t.color }}
-                />
+                <TeamDot color={t.color} size="2.5" />
                 {t.name}
                 <span className="text-xs">{voted ? "✓" : "·"}</span>
               </span>
@@ -100,10 +99,7 @@ export function CostumeMonitor({
               className="frame-gilt flex items-center gap-3 rounded-card bg-panel/60 px-3 py-2"
             >
               <Medal rank={row.place} />
-              <span
-                className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
-                style={{ backgroundColor: color(row.teamId) }}
-              />
+              <TeamDot color={color(row.teamId)} />
               <span className="min-w-0 flex-1 truncate font-body text-cream">{name(row.teamId)}</span>
               <span className="nums text-gilt">{row.points} pts</span>
             </div>

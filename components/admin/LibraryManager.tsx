@@ -1,30 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useApi } from "@/lib/hooks/useApi";
+import { useApi, jsonInit } from "@/lib/hooks/useApi";
 import { Panel } from "@/components/shared/Panel";
 import { Button } from "@/components/shared/Button";
 import { Badge } from "@/components/shared/Badge";
-import { cn } from "@/lib/cn";
-import {
-  scoringKindOf,
-  applyScoringKind,
-  SCORING_KIND_OPTIONS,
-  type ScoringKind,
-} from "@/lib/scoring-kinds";
+import { ErrorNote } from "@/components/shared/ErrorNote";
+import { Input, Select, inputClass } from "@/components/shared/Input";
+import { ScoringKindSelect } from "./ScoringKindSelect";
+import { scoringKindOf } from "@/lib/scoring-kinds";
+import type { LibraryGameVM } from "@/lib/view-models";
 
-export interface LibraryEntry {
-  id: string;
-  name: string;
-  scoreType: "high_wins" | "low_wins";
-  scoreSource: "manual" | "voting";
-  scoreUnit: string;
-  defaultNumRounds: number;
-  supplies: string;
-  notes: string;
-}
-
-type Draft = Omit<LibraryEntry, "id">;
+type Draft = Omit<LibraryGameVM, "id">;
 
 const EMPTY: Draft = {
   name: "",
@@ -36,10 +23,7 @@ const EMPTY: Draft = {
   notes: "",
 };
 
-const inputClass =
-  "h-10 rounded-card border border-gilt bg-forest-deep/60 px-3 font-body text-cream outline-none focus:border-gilt-strong placeholder:text-cream/30";
-
-export function LibraryManager({ entries }: { entries: LibraryEntry[] }) {
+export function LibraryManager({ entries }: { entries: LibraryGameVM[] }) {
   const { call, busy, error } = useApi();
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -53,7 +37,7 @@ export function LibraryManager({ entries }: { entries: LibraryEntry[] }) {
     setDraft(EMPTY);
     setShowForm(true);
   }
-  function startEdit(e: LibraryEntry) {
+  function startEdit(e: LibraryGameVM) {
     setEditId(e.id);
     const { id: _id, ...rest } = e;
     void _id;
@@ -65,16 +49,8 @@ export function LibraryManager({ entries }: { entries: LibraryEntry[] }) {
     ev.preventDefault();
     if (!draft.name.trim()) return;
     const ok = editId
-      ? await call(`/api/admin/library/${editId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draft),
-        })
-      : await call("/api/admin/library", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draft),
-        });
+      ? await call(`/api/admin/library/${editId}`, jsonInit("PATCH", draft))
+      : await call("/api/admin/library", jsonInit("POST", draft));
     if (ok) {
       setShowForm(false);
       setDraft(EMPTY);
@@ -82,7 +58,7 @@ export function LibraryManager({ entries }: { entries: LibraryEntry[] }) {
     }
   }
 
-  async function remove(e: LibraryEntry) {
+  async function remove(e: LibraryGameVM) {
     if (!confirm(`Delete "${e.name}" from the library? Editions already using it keep their copy.`))
       return;
     await call(`/api/admin/library/${e.id}`, { method: "DELETE" });
@@ -93,17 +69,17 @@ export function LibraryManager({ entries }: { entries: LibraryEntry[] }) {
   return (
     <div className="space-y-4">
       {error && (
-        <p className="rounded-card border border-cranberry/50 bg-cranberry/15 px-4 py-2.5 text-sm text-cream">
+        <ErrorNote>
           {error}
-        </p>
+        </ErrorNote>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <input
+        <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search games…"
-          className={cn(inputClass, "w-64")}
+          className="w-64"
         />
         <Button size="sm" onClick={showForm && !editId ? () => setShowForm(false) : startAdd}>
           {showForm && !editId ? "Close" : "+ New Game"}
@@ -114,56 +90,43 @@ export function LibraryManager({ entries }: { entries: LibraryEntry[] }) {
         <Panel inset>
           <form onSubmit={submit} className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
-              <input
+              <Input
                 value={draft.name}
                 onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                 placeholder="Game name"
-                className={inputClass}
               />
-              <input
+              <Input
                 value={draft.scoreUnit}
                 onChange={(e) => setDraft({ ...draft, scoreUnit: e.target.value })}
                 placeholder="Unit"
                 disabled={kind !== "count"}
-                className={cn(inputClass, kind !== "count" && "opacity-60")}
+                className={kind !== "count" ? "opacity-60" : undefined}
               />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <select
-                value={kind}
-                onChange={(e) =>
-                  setDraft({ ...draft, ...applyScoringKind(e.target.value as ScoringKind, draft.scoreUnit) })
-                }
-                className={inputClass}
-              >
-                {SCORING_KIND_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-              <select
+              <ScoringKindSelect value={draft} onChange={(next) => setDraft({ ...draft, ...next })} />
+              <Select
                 value={draft.defaultNumRounds}
                 onChange={(e) => setDraft({ ...draft, defaultNumRounds: Number(e.target.value) })}
                 disabled={kind === "voting"}
-                className={cn(inputClass, kind === "voting" && "opacity-60")}
+                className={kind === "voting" ? "opacity-60" : undefined}
               >
                 <option value={1}>1 round</option>
                 <option value={2}>2 rounds</option>
-              </select>
+              </Select>
             </div>
-            <input
+            <Input
               value={draft.supplies}
               onChange={(e) => setDraft({ ...draft, supplies: e.target.value })}
               placeholder="Supplies"
-              className={cn(inputClass, "w-full")}
+              className="w-full"
             />
             <textarea
               value={draft.notes}
               onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
               placeholder="Host notes"
               rows={2}
-              className={cn(inputClass, "h-auto w-full py-2")}
+              className={inputClass(false, "h-auto w-full py-2")}
             />
             <div className="flex gap-2">
               <Button type="submit" disabled={busy || !draft.name.trim()}>

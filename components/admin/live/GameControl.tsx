@@ -6,7 +6,7 @@ import { Badge } from "@/components/shared/Badge";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/cn";
 import { useApi, jsonInit } from "@/lib/hooks/useApi";
-import type { LiveGameVM } from "./types";
+import type { GameVM } from "@/lib/view-models";
 
 export function GameControl({
   yearId,
@@ -15,7 +15,7 @@ export function GameControl({
   locked,
 }: {
   yearId: string;
-  games: LiveGameVM[];
+  games: GameVM[];
   activeGameId: string | null;
   locked: boolean;
 }) {

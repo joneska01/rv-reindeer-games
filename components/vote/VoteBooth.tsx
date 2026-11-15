@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Panel } from "@/components/shared/Panel";
 import { Button } from "@/components/shared/Button";
 import { Badge } from "@/components/shared/Badge";
-import { cn } from "@/lib/cn";
 import { VOTE_CONFIRM } from "@/lib/copy";
+import { usePolling } from "@/lib/hooks/usePolling";
 import type { VoteState } from "@/lib/voting";
-
-const inputClass =
-  "h-11 w-full rounded-card border border-gilt bg-forest-deep/60 px-3 font-body text-cream outline-none focus:border-gilt-strong";
+import { ErrorNote } from "@/components/shared/ErrorNote";
+import { Select } from "@/components/shared/Input";
 
 const RANKS = [
   { key: "firstPlaceTeamId", label: "1st place", points: 10 },
@@ -25,28 +24,12 @@ export function VoteBooth({
   initial: VoteState;
   pollMs?: number;
 }) {
-  const [state, setState] = useState<VoteState>(initial);
+  const { data: state } = usePolling<VoteState>("/api/vote", pollMs, initial);
   const [voter, setVoter] = useState("");
   const [picks, setPicks] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<null | "first" | "updated">(null);
-  const doneRef = useRef(false);
-
-  async function load() {
-    try {
-      const res = await fetch("/api/vote", { cache: "no-store" });
-      const data = (await res.json()) as VoteState;
-      setState(data);
-    } catch {
-      /* keep last state */
-    }
-  }
-
-  useEffect(() => {
-    const id = setInterval(load, pollMs);
-    return () => clearInterval(id);
-  }, [pollMs]);
 
   const teams = state?.teams ?? [];
   const chosen = RANKS.map((r) => picks[r.key]).filter(Boolean);
@@ -67,7 +50,6 @@ export function VoteBooth({
       if (!res.ok) {
         setError(data.error ?? "Something went wrong.");
       } else {
-        doneRef.current = true;
         setDone(data.updated ? "updated" : "first");
       }
     } finally {
@@ -120,19 +102,19 @@ export function VoteBooth({
       </div>
 
       {error && (
-        <p className="mb-4 rounded-card border border-cranberry/50 bg-cranberry/15 px-4 py-2.5 text-sm text-cream">
+        <ErrorNote className="mb-4">
           {error}
-        </p>
+        </ErrorNote>
       )}
 
       <label className="mb-5 block">
         <span className="eyebrow mb-1.5 block">Which couple are you?</span>
-        <select value={voter} onChange={(e) => setVoter(e.target.value)} className={inputClass}>
+        <Select tall value={voter} onChange={(e) => setVoter(e.target.value)} className="w-full">
           <option value="">— choose your couple —</option>
           {teams.map((t) => (
             <option key={t.id} value={t.id}>{t.name}</option>
           ))}
-        </select>
+        </Select>
       </label>
 
       <div className="space-y-3">
@@ -141,16 +123,17 @@ export function VoteBooth({
             <span className="eyebrow mb-1.5 flex items-center gap-2">
               {r.label} <Badge tone="gold">{r.points} pts</Badge>
             </span>
-            <select
+            <Select
+              tall
               value={picks[r.key] ?? ""}
               onChange={(e) => setPicks((p) => ({ ...p, [r.key]: e.target.value }))}
-              className={cn(inputClass)}
+              className="w-full"
             >
               <option value="">— pick a couple —</option>
               {teams.map((t) => (
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
-            </select>
+            </Select>
           </label>
         ))}
       </div>

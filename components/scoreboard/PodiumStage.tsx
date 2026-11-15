@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/cn";
 import { StringLights } from "@/components/decor/StringLights";
-import type { SbTeam, SbStanding } from "@/lib/scoreboard";
+import type { TeamVM, StandingVM } from "@/lib/view-models";
+import { TeamDot } from "@/components/shared/TeamDot";
 
 type PodiumState = "hidden" | "show_third" | "show_second" | "show_first" | "show_all";
 
@@ -26,8 +27,8 @@ export function PodiumStage({
   standings,
   podiumState,
 }: {
-  teams: SbTeam[];
-  standings: SbStanding[];
+  teams: TeamVM[];
+  standings: StandingVM[];
   podiumState: PodiumState;
 }) {
   const team = (id: string) => teams.find((t) => t.id === id);
@@ -64,10 +65,7 @@ export function PodiumStage({
                   seats.map(({ s, t }) => (
                     <div key={s.teamId} className="mt-2">
                       <div className="flex items-center justify-center gap-2.5">
-                        <span
-                          className="size-5 rounded-full ring-1 ring-cream/20"
-                          style={{ backgroundColor: t?.color ?? "#888" }}
-                        />
+                        <TeamDot color={t?.color ?? "#888"} size="5" />
                         <span
                           className={cn(
                             "font-body text-cream",

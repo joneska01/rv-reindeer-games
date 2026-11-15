@@ -2,24 +2,9 @@ import 'server-only';
 import { getActiveYear } from '@/lib/years';
 import { getLiveData, rankStandings } from '@/lib/live';
 import { computeGameRankings } from '@/lib/scoring';
+import { toTeamVM, toStandingVM, type TeamVM, type StandingVM } from '@/lib/view-models';
 
 // ── Public payload types (safe to `import type` from client components) ──────
-
-export interface SbTeam {
-  id: string;
-  name: string;
-  color: string;
-}
-
-export interface SbStanding {
-  teamId: string;
-  rank: number;
-  totalPoints: number;
-  foulCount: number;
-  gamesCompleted: number;
-  isTied: boolean;
-  unresolvedTie: boolean;
-}
 
 export interface SbGameRank {
   teamId: string;
@@ -49,8 +34,8 @@ export interface ScoreboardPayload {
   hasStarted?: boolean;
   displayMode?: 'scoreboard' | 'podium' | 'final_results';
   podiumState?: 'hidden' | 'show_third' | 'show_second' | 'show_first' | 'show_all';
-  teams?: SbTeam[];
-  standings?: SbStanding[];
+  teams?: TeamVM[];
+  standings?: StandingVM[];
   activeGame?: SbActiveGame | null;
   totalGames?: number;
   completedGames?: number;
@@ -68,21 +53,8 @@ export async function buildScoreboard(): Promise<ScoreboardPayload> {
   const data = await getLiveData(year.id);
   const { ranked } = rankStandings(data);
 
-  const teams: SbTeam[] = data.teams.map((t) => ({
-    id: t.id,
-    name: t.name,
-    color: t.displayColor,
-  }));
-
-  const standings: SbStanding[] = ranked.map((r) => ({
-    teamId: r.teamId,
-    rank: r.rank,
-    totalPoints: r.totalPoints,
-    foulCount: r.partyFoulCount,
-    gamesCompleted: r.gamesCompleted,
-    isTied: r.isTied,
-    unresolvedTie: r.unresolvedTie,
-  }));
+  const teams = data.teams.map(toTeamVM);
+  const standings = ranked.map(toStandingVM);
 
   let activeGame: SbActiveGame | null = null;
   const live = year.activeGameId

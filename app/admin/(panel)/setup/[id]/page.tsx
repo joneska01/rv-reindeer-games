@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import { getYear } from "@/lib/years";
 import { listTeams, listGames, listLibrary } from "@/lib/setup";
 import { Badge } from "@/components/shared/Badge";
-import { TeamManager, type TeamRow } from "@/components/admin/TeamManager";
-import { GameManager, type GameRow, type LibraryRow } from "@/components/admin/GameManager";
+import { TeamManager } from "@/components/admin/TeamManager";
+import { GameManager } from "@/components/admin/GameManager";
 import { ResetEditionButton } from "@/components/admin/ResetEditionButton";
+import { toTeamVM, toGameVM, toLibraryGameVM } from "@/lib/view-models";
+import { ErrorNote } from "@/components/shared/ErrorNote";
 
 export default async function YearSetupPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,31 +19,6 @@ export default async function YearSetupPage({ params }: { params: Promise<{ id: 
     listGames(id),
     listLibrary(),
   ]);
-
-  const teamRows: TeamRow[] = teams.map((t) => ({
-    id: t.id,
-    name: t.name,
-    displayColor: t.displayColor,
-  }));
-  const gameRows: GameRow[] = games.map((g) => ({
-    id: g.id,
-    name: g.name,
-    scoringDescription: g.scoringDescription,
-    scoreType: g.scoreType,
-    scoreSource: g.scoreSource,
-    scoreUnit: g.scoreUnit,
-    numRounds: g.numRounds,
-    roundCombineMethod: g.roundCombineMethod,
-    isComplete: g.isComplete,
-  }));
-  const libraryRows: LibraryRow[] = library.map((l) => ({
-    id: l.id,
-    name: l.name,
-    scoreType: l.scoreType,
-    scoreSource: l.scoreSource,
-    scoreUnit: l.scoreUnit,
-    defaultNumRounds: l.defaultNumRounds,
-  }));
 
   return (
     <div className="space-y-8">
@@ -64,16 +41,16 @@ export default async function YearSetupPage({ params }: { params: Promise<{ id: 
       )}
 
       {year.isLocked && (
-        <p className="rounded-card border border-cranberry/50 bg-cranberry/15 px-4 py-2.5 text-sm text-cream">
+        <ErrorNote>
           This edition is locked — teams and games are read-only.
-        </p>
+        </ErrorNote>
       )}
 
-      <TeamManager yearId={year.id} teams={teamRows} locked={year.isLocked} />
+      <TeamManager yearId={year.id} teams={teams.map(toTeamVM)} locked={year.isLocked} />
       <GameManager
         yearId={year.id}
-        games={gameRows}
-        library={libraryRows}
+        games={games.map(toGameVM)}
+        library={library.map(toLibraryGameVM)}
         locked={year.isLocked}
       />
 

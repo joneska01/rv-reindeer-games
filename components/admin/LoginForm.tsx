@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClass } from "@/components/shared/Button";
+import { ErrorNote } from "@/components/shared/ErrorNote";
 
 export function LoginForm() {
   const router = useRouter();
@@ -49,9 +50,9 @@ export function LoginForm() {
       </label>
 
       {error && (
-        <p className="rounded-card border border-cranberry/50 bg-cranberry/15 px-3 py-2 text-sm text-cream">
+        <ErrorNote compact>
           {error}
-        </p>
+        </ErrorNote>
       )}
 
       <button type="submit" disabled={pending || !password} className={buttonClass("gold", "md")}>

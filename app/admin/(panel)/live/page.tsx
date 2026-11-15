@@ -7,14 +7,8 @@ import { Panel } from "@/components/shared/Panel";
 import { Badge } from "@/components/shared/Badge";
 import { buttonClass } from "@/components/shared/Button";
 import { LiveConsole } from "@/components/admin/live/LiveConsole";
-import type {
-  LiveTeamVM,
-  LiveGameVM,
-  LiveScoreVM,
-  LiveFoulVM,
-  StandingVM,
-  VoteTallyVM,
-} from "@/components/admin/live/types";
+import type { LiveScoreVM, LiveFoulVM, VoteTallyVM } from "@/components/admin/live/types";
+import { toTeamVM, toGameVM, toStandingVM } from "@/lib/view-models";
 
 export const metadata = { title: "Live Event — RV Reindeer Games" };
 
@@ -41,22 +35,8 @@ export default async function LivePage() {
   // Run the single engine: standings come from completed games minus fouls.
   const { ranked } = rankStandings(data);
 
-  const teamVMs: LiveTeamVM[] = teams.map((t) => ({
-    id: t.id,
-    name: t.name,
-    color: t.displayColor,
-  }));
-
-  const gameVMs: LiveGameVM[] = games.map((g) => ({
-    id: g.id,
-    name: g.name,
-    scoreType: g.scoreType,
-    scoreSource: g.scoreSource,
-    scoreUnit: g.scoreUnit,
-    numRounds: g.numRounds,
-    roundCombineMethod: g.roundCombineMethod,
-    isComplete: g.isComplete,
-  }));
+  const teamVMs = teams.map(toTeamVM);
+  const gameVMs = games.map(toGameVM);
 
   const scoreVMs: LiveScoreVM[] = scores.map((s) => ({
     gameId: s.gameId,
@@ -71,15 +51,7 @@ export default async function LivePage() {
     description: f.description,
   }));
 
-  const standingVMs: StandingVM[] = ranked.map((r) => ({
-    teamId: r.teamId,
-    rank: r.rank,
-    totalPoints: r.totalPoints,
-    foulCount: r.partyFoulCount,
-    gamesCompleted: r.gamesCompleted,
-    isTied: r.isTied,
-    unresolvedTie: r.unresolvedTie,
-  }));
+  const standingVMs = ranked.map(toStandingVM);
 
   // Costume tally — only meaningful when the active game is a voting game.
   const activeGame = games.find((g) => g.id === active.activeGameId) ?? null;

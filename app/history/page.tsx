@@ -6,6 +6,7 @@ import { Badge } from "@/components/shared/Badge";
 import { Medal } from "@/components/shared/Medal";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { buttonClass } from "@/components/shared/Button";
+import { TeamDot } from "@/components/shared/TeamDot";
 
 export const metadata = { title: "Hall of Records — RV Reindeer Games" };
 
@@ -64,10 +65,7 @@ function YearCard({ year }: { year: HistoricalYear }) {
             <span className="flex w-8 justify-center">
               <Medal rank={t.final_rank} />
             </span>
-            <span
-              className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
-              style={{ backgroundColor: t.display_color }}
-            />
+            <TeamDot color={t.display_color} />
             <span className="flex-1 truncate font-body text-cream">{t.name}</span>
             <span className="nums text-lg text-gilt">{t.final_total}</span>
           </li>
