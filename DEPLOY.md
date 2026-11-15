@@ -5,9 +5,9 @@ A start-to-finish checklist for shipping to production. You've done Vercel befor
 
 ## What you're deploying
 
-Next.js 16 app on Vercel, backed by your **Neon Postgres** database (provisioned
+Next.js 16 app on Vercel, backed by your **Prisma Postgres** database (provisioned
 through the Vercel Marketplace in an earlier session). Production and local dev
-currently share that one Neon database — that's fine for a party app, just know
+currently share that one Prisma Postgres database — that's fine for a party app, just know
 that the `9999` test edition and any rehearsal data live there too.
 
 ---
@@ -47,7 +47,7 @@ to the **Production** environment (and Preview, if you want preview deploys to w
 |---|---|---|
 | `ADMIN_PASSWORD` | *(pick a strong one)* | The single password for `/admin/login`. Share with co-hosts only. |
 | `SESSION_SECRET` | *(generate — see below)* | Encrypts the login cookie. 32+ chars. |
-| `DATABASE_URL` | *(likely already there)* | The Neon integration usually injects this automatically. If you don't see it, copy the connection string from **Storage → your Neon DB → Connect**. |
+| `DATABASE_URL` | *(likely already there)* | The Prisma Postgres integration usually injects this automatically. If you don't see it, copy the connection string from **Storage → your Prisma Postgres DB → Connect**. |
 | `NEXT_PUBLIC_APP_NAME` | `RV Reindeer Games` | Optional — display name. |
 | `NEXT_PUBLIC_POLL_INTERVAL_MS` | `8000` | Optional — scoreboard refresh (ms). |
 | `NEXT_PUBLIC_VOTES_POLL_INTERVAL_MS` | `10000` | Optional — vote-booth refresh (ms). |
