@@ -105,8 +105,10 @@ app/
     vote/                   GET state + POST a ballot (public)
 
 components/
-  shared/      Panel, Button, Badge, Medal, SectionHeading (the design kit)
-  admin/       Admin UI; admin/live/* is the live console
+  shared/      The design kit: Panel, Button, Badge, Medal, SectionHeading, ErrorNote,
+               TeamDot, Input/Select/inputClass. Restyle once here, not in 9 files.
+  admin/       Admin UI; admin/live/* is the live console. GameManager = GameForm +
+               SortableGameList; ScoringKindSelect is shared with the library form.
   scoreboard/  The TV screens (Welcome, Split, Podium, Final, Idle, Intermission)
   vote/        VoteBooth
   decor/       Snowfall, StringLights, Confetti, IntermissionScene (eye candy)
@@ -166,7 +168,11 @@ The host drives all of this from the **Awards** tab (`components/admin/ClosingCo
 | `api.ts` | `ok()`, `fail()`, `parseBody()` (Zod), `ApiError`, `assertUnlocked()`, `toErrorResponse()`, `isUniqueViolation()` — pure response/error helpers. | No DB or `next/headers` imports, so Vitest can load it. |
 | `db.ts`, `db-url.ts` | Drizzle client + resilient connection-string resolution. | See §10. |
 | `copy.ts` | Centralized witty copy (idle lines, vote confirmations, the "Naughty List"). | Keep the voice consistent here. |
-| `cn.ts` | `cn(...)` — merge Tailwind class strings. | |
+| `cn.ts` | `cn(...)` — merge Tailwind class strings. | Plain joiner, **not** tailwind-merge: never pass two conflicting utilities (`h-10` + `h-9`); CSS order decides and it's fragile. |
+| `view-models.ts` | `TeamVM`, `GameVM`, `LibraryGameVM`, `StandingVM` + their `toXxxVM()` mappers. | The one definition of what the server hands client components. Pure, unit-tested. Never ship host-only fields (e.g. game `instructions`). |
+| `hooks/useApi.ts` | Admin mutations: busy/error state, refreshes server data. | `jsonInit(method, body)` builds the request. |
+| `hooks/usePolling.ts` | `usePolling(url, ms, initial)` for the TV scoreboard and vote booth. | Keeps last good data, never stacks requests, pauses while the tab is hidden and refreshes on return. |
+| `hooks/useAutoRefresh.ts` | `router.refresh()` on an interval for admin panels. | Also pauses while hidden. |
 
 ## 8. Data model (the tables)
 
@@ -252,7 +258,11 @@ pick it up automatically. UI labels live in `lib/scoring-kinds.ts`.
   `RV-Reindeer-Games-PRD-v3.md` plus the v3.1 deltas design doc.
 - **Admin mutations go through `useApi`** (`lib/hooks/useApi.ts`): one fetch helper with
   busy/error state that always clears, even on a network failure. Don't hand-roll another.
-  Panels that must reflect *other people's* actions use `useAutoRefresh`.
+  Panels that must reflect *other people's* actions use `useAutoRefresh`; public pages that
+  poll an endpoint (TV, vote booth) use `usePolling`.
+- **Server → client data goes through `lib/view-models.ts`.** Add a field there (and to its
+  mapper) rather than building ad-hoc objects in a page. Use `TeamDot`, `ErrorNote` and
+  `Input`/`Select` from `components/shared/` instead of re-pasting their markup.
 - **Score inputs keep unsaved drafts across refreshes.** `ScoreEntry` drops a draft only
   once the server value matches it — don't reset drafts wholesale or the host's typing
   in a neighbouring cell will vanish.

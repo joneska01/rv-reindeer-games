@@ -7,7 +7,10 @@ import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/cn";
 import { NAUGHTY } from "@/lib/copy";
 import { useApi, jsonInit } from "@/lib/hooks/useApi";
-import type { LiveTeamVM, LiveFoulVM } from "./types";
+import type { TeamVM } from "@/lib/view-models";
+import type { LiveFoulVM } from "./types";
+import { TeamDot } from "@/components/shared/TeamDot";
+import { ErrorNote } from "@/components/shared/ErrorNote";
 
 export function NaughtyList({
   yearId,
@@ -16,7 +19,7 @@ export function NaughtyList({
   locked,
 }: {
   yearId: string;
-  teams: LiveTeamVM[];
+  teams: TeamVM[];
   fouls: LiveFoulVM[];
   locked: boolean;
 }) {
@@ -57,9 +60,9 @@ export function NaughtyList({
       </p>
 
       {error && (
-        <p className="mt-3 rounded-card border border-cranberry/50 bg-cranberry/15 px-4 py-2.5 text-sm text-cream">
+        <ErrorNote className="mt-3">
           {error}
-        </p>
+        </ErrorNote>
       )}
 
       <div className="mt-3 space-y-2">
@@ -71,10 +74,7 @@ export function NaughtyList({
               className="frame-gilt rounded-card bg-panel/60 px-3 py-2.5"
             >
               <div className="flex items-center gap-3">
-                <span
-                  className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
-                  style={{ backgroundColor: t.color }}
-                />
+                <TeamDot color={t.color} />
                 <span className="min-w-0 flex-1 truncate font-body text-cream">{t.name}</span>
                 <span className="nums text-sm text-cranberry-bright">
                   −{list.length}

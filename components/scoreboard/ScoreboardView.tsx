@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Snowfall } from "@/components/decor/Snowfall";
 import { Confetti } from "@/components/decor/Confetti";
@@ -12,6 +11,7 @@ import { PodiumStage } from "./PodiumStage";
 import { FinalResults } from "./FinalResults";
 import { IdleScreen } from "./IdleScreen";
 import { WelcomeScreen } from "./WelcomeScreen";
+import { usePolling } from "@/lib/hooks/usePolling";
 import type { ScoreboardPayload } from "@/lib/scoreboard";
 
 export function ScoreboardView({
@@ -21,31 +21,8 @@ export function ScoreboardView({
   initial: ScoreboardPayload;
   pollMs: number;
 }) {
-  const [data, setData] = useState<ScoreboardPayload>(initial);
-  const [tick, setTick] = useState(0);
-
-  // Poll the public API on an interval; keep the last good payload on failure
-  // so a blip never blanks the TV.
-  useEffect(() => {
-    let alive = true;
-    const id = setInterval(async () => {
-      try {
-        const res = await fetch("/api/scoreboard", { cache: "no-store" });
-        if (!res.ok) return;
-        const next = (await res.json()) as ScoreboardPayload;
-        if (alive) {
-          setData(next);
-          setTick((t) => t + 1);
-        }
-      } catch {
-        /* keep showing the last good data */
-      }
-    }, pollMs);
-    return () => {
-      alive = false;
-      clearInterval(id);
-    };
-  }, [pollMs]);
+  // Keeps the last good payload on failure so a blip never blanks the TV.
+  const { data, tick } = usePolling<ScoreboardPayload>("/api/scoreboard", pollMs, initial);
 
   if (!data.active) {
     return (

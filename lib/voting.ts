@@ -4,19 +4,14 @@ import { teams, games } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { getActiveYear } from '@/lib/years';
 import type { Game } from '@/db/schema';
-
-export interface VoteTeam {
-  id: string;
-  name: string;
-  color: string;
-}
+import { toTeamVM, type TeamVM } from '@/lib/view-models';
 
 export interface VoteState {
   open: boolean;
   year?: number;
   yearId?: string;
   gameName?: string;
-  teams?: VoteTeam[];
+  teams?: TeamVM[];
 }
 
 /** The active voting game for an edition, if voting is currently open. */
@@ -44,6 +39,6 @@ export async function getVotingState(): Promise<VoteState> {
     year: year.year,
     yearId: year.id,
     gameName: game.name,
-    teams: roster.map((t) => ({ id: t.id, name: t.name, color: t.displayColor })),
+    teams: roster.map(toTeamVM),
   };
 }

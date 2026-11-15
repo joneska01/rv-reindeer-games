@@ -3,7 +3,8 @@
 import { Medal } from "@/components/shared/Medal";
 import { Badge } from "@/components/shared/Badge";
 import { cn } from "@/lib/cn";
-import type { SbTeam, SbStanding } from "@/lib/scoreboard";
+import type { TeamVM, StandingVM } from "@/lib/view-models";
+import { TeamDot } from "@/components/shared/TeamDot";
 
 export function StandingsBoard({
   teams,
@@ -11,8 +12,8 @@ export function StandingsBoard({
   title = "Standings",
   dense = false,
 }: {
-  teams: SbTeam[];
-  standings: SbStanding[];
+  teams: TeamVM[];
+  standings: StandingVM[];
   title?: string;
   dense?: boolean;
 }) {
@@ -40,10 +41,7 @@ export function StandingsBoard({
                 <span className="flex w-9 shrink-0 justify-center">
                   <Medal rank={s.rank} />
                 </span>
-                <span
-                  className="size-4 shrink-0 rounded-full ring-1 ring-cream/20"
-                  style={{ backgroundColor: t?.color ?? "#888" }}
-                />
+                <TeamDot color={t?.color ?? "#888"} size="4" />
                 <span
                   className={cn(
                     "min-w-0 flex-1 truncate font-body text-cream",

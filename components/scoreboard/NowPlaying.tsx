@@ -5,7 +5,9 @@ import { Badge } from "@/components/shared/Badge";
 import { cn } from "@/lib/cn";
 import { IDLE_LINES, pickLine } from "@/lib/copy";
 import { IntermissionScene } from "@/components/decor/IntermissionScene";
-import type { SbTeam, SbActiveGame } from "@/lib/scoreboard";
+import type { TeamVM } from "@/lib/view-models";
+import type { SbActiveGame } from "@/lib/scoreboard";
+import { TeamDot } from "@/components/shared/TeamDot";
 
 /** Whole numbers stay whole; timed scores show up to 2 decimals (no float noise). */
 function fmtScore(n: number): string {
@@ -17,7 +19,7 @@ export function NowPlaying({
   game,
   seed,
 }: {
-  teams: SbTeam[];
+  teams: TeamVM[];
   game: SbActiveGame | null;
   seed: number;
 }) {
@@ -71,10 +73,7 @@ export function NowPlaying({
                 <span className="flex w-8 justify-center">
                   <Medal rank={r.place} />
                 </span>
-                <span
-                  className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
-                  style={{ backgroundColor: t?.color ?? "#888" }}
-                />
+                <TeamDot color={t?.color ?? "#888"} />
                 <span className="min-w-0 flex-1 truncate font-body text-cream">{t?.name ?? "—"}</span>
                 <span className="nums text-lg text-gilt">
                   {fmtScore(r.combinedScore)}
@@ -112,10 +111,7 @@ export function NowPlaying({
                         : "border-amber/50 bg-amber/10 text-amber",
                     )}
                   >
-                    <span
-                      className="size-2.5 rounded-full ring-1 ring-cream/20"
-                      style={{ backgroundColor: t.color }}
-                    />
+                    <TeamDot color={t.color} size="2.5" />
                     {t.name}
                     <span className="text-xs">{voted ? "✓" : "·"}</span>
                   </span>

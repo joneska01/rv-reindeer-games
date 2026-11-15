@@ -7,14 +7,8 @@ import { ScoreEntry } from "./ScoreEntry";
 import { CostumeMonitor } from "./CostumeMonitor";
 import { NaughtyList } from "./NaughtyList";
 import { StandingsPreview } from "./StandingsPreview";
-import type {
-  LiveGameVM,
-  LiveTeamVM,
-  LiveScoreVM,
-  LiveFoulVM,
-  StandingVM,
-  VoteTallyVM,
-} from "./types";
+import type { GameVM, TeamVM, StandingVM } from "@/lib/view-models";
+import type { LiveScoreVM, LiveFoulVM, VoteTallyVM } from "./types";
 
 export function LiveConsole({
   yearId,
@@ -29,8 +23,8 @@ export function LiveConsole({
 }: {
   yearId: string;
   locked: boolean;
-  teams: LiveTeamVM[];
-  games: LiveGameVM[];
+  teams: TeamVM[];
+  games: GameVM[];
   scores: LiveScoreVM[];
   fouls: LiveFoulVM[];
   standings: StandingVM[];

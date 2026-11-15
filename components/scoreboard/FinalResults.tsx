@@ -1,15 +1,15 @@
 "use client";
 
 import { StandingsBoard } from "./StandingsBoard";
-import type { SbTeam, SbStanding } from "@/lib/scoreboard";
+import type { TeamVM, StandingVM } from "@/lib/view-models";
 
 export function FinalResults({
   teams,
   standings,
   year,
 }: {
-  teams: SbTeam[];
-  standings: SbStanding[];
+  teams: TeamVM[];
+  standings: StandingVM[];
   year?: number;
 }) {
   const champ = standings.find((s) => s.rank === 1);

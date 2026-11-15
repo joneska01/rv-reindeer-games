@@ -1,17 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useApi } from "@/lib/hooks/useApi";
+import { useApi, jsonInit } from "@/lib/hooks/useApi";
 import { Panel } from "@/components/shared/Panel";
 import { Button } from "@/components/shared/Button";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/cn";
-
-export interface TeamRow {
-  id: string;
-  name: string;
-  displayColor: string;
-}
+import type { TeamVM } from "@/lib/view-models";
+import { TeamDot } from "@/components/shared/TeamDot";
+import { ErrorNote } from "@/components/shared/ErrorNote";
+import { Input } from "@/components/shared/Input";
 
 const MAX_TEAMS = 16;
 const SWATCHES = [
@@ -19,16 +17,13 @@ const SWATCHES = [
   "#0E7C7B", "#C46210", "#8B1E3F", "#3A7D44", "#B8860B", "#4A90D9",
 ];
 
-const inputClass =
-  "h-10 rounded-card border border-gilt bg-forest-deep/60 px-3 font-body text-cream outline-none focus:border-gilt-strong placeholder:text-cream/30";
-
 export function TeamManager({
   yearId,
   teams,
   locked,
 }: {
   yearId: string;
-  teams: TeamRow[];
+  teams: TeamVM[];
   locked: boolean;
 }) {
   const { call, busy, error } = useApi();
@@ -44,24 +39,22 @@ export function TeamManager({
   async function addTeam(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    const ok = await call("/api/admin/teams", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ yearId, name: name.trim(), displayColor: color }),
-    });
+    const ok = await call(
+      "/api/admin/teams",
+      jsonInit("POST", { yearId, name: name.trim(), displayColor: color }),
+    );
     if (ok) setName("");
   }
 
   async function saveEdit(id: string) {
-    const ok = await call(`/api/admin/teams/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editName.trim(), displayColor: editColor }),
-    });
+    const ok = await call(
+      `/api/admin/teams/${id}`,
+      jsonInit("PATCH", { name: editName.trim(), displayColor: editColor }),
+    );
     if (ok) setEditId(null);
   }
 
-  async function removeTeam(t: TeamRow) {
+  async function removeTeam(t: TeamVM) {
     if (!confirm(`Remove ${t.name}?`)) return;
     await call(`/api/admin/teams/${t.id}`, { method: "DELETE" });
   }
@@ -79,19 +72,19 @@ export function TeamManager({
       />
 
       {error && (
-        <p className="rounded-card border border-cranberry/50 bg-cranberry/15 px-4 py-2.5 text-sm text-cream">
+        <ErrorNote>
           {error}
-        </p>
+        </ErrorNote>
       )}
 
       {!locked && (
         <Panel inset>
           <form onSubmit={addTeam} className="flex flex-wrap items-center gap-3">
-            <input
+            <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Team name (e.g. Murphys)"
-              className={cn(inputClass, "min-w-52 flex-1")}
+              className="min-w-52 flex-1"
               disabled={atCap}
             />
             <div className="flex items-center gap-1.5">
@@ -138,10 +131,10 @@ export function TeamManager({
                 onChange={(e) => setEditColor(e.target.value)}
                 className="size-7 cursor-pointer rounded border border-gilt bg-transparent"
               />
-              <input
+              <Input
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className={cn(inputClass, "h-9 flex-1")}
+                className="h-9 flex-1"
               />
               <Button size="sm" onClick={() => saveEdit(t.id)} disabled={busy}>
                 Save
@@ -156,10 +149,7 @@ export function TeamManager({
               className="frame-gilt flex items-center justify-between gap-3 rounded-card bg-panel/60 px-4 py-2.5"
             >
               <div className="flex items-center gap-3">
-                <span
-                  className="size-4 rounded-full ring-1 ring-cream/20"
-                  style={{ backgroundColor: t.displayColor }}
-                />
+                <TeamDot color={t.color} size="4" />
                 <span className="font-body text-cream">{t.name}</span>
               </div>
               {!locked && (
@@ -168,7 +158,7 @@ export function TeamManager({
                     onClick={() => {
                       setEditId(t.id);
                       setEditName(t.name);
-                      setEditColor(t.displayColor);
+                      setEditColor(t.color);
                     }}
                     className="px-2 py-1 text-xs uppercase tracking-wider text-sage/70 transition-colors hover:text-gold-soft"
                   >

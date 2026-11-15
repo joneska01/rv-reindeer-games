@@ -7,6 +7,8 @@ import { Medal } from "@/components/shared/Medal";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/cn";
 import { useApi, jsonInit } from "@/lib/hooks/useApi";
+import { TeamDot } from "@/components/shared/TeamDot";
+import { ErrorNote } from "@/components/shared/ErrorNote";
 
 type DisplayMode = "scoreboard" | "podium" | "final_results";
 type PodiumState = "hidden" | "show_third" | "show_second" | "show_first" | "show_all";
@@ -69,9 +71,9 @@ export function ClosingControls({
   return (
     <div className="space-y-6">
       {error && (
-        <p className="rounded-card border border-cranberry/50 bg-cranberry/15 px-4 py-2.5 text-sm text-cream">
+        <ErrorNote>
           {error}
-        </p>
+        </ErrorNote>
       )}
 
       {/* ── TV display mode ─────────────────────────────────────────── */}
@@ -151,10 +153,7 @@ export function ClosingControls({
                 <span className="flex w-8 justify-center">
                   <Medal rank={seat.rank} />
                 </span>
-                <span
-                  className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
-                  style={{ backgroundColor: seat.color }}
-                />
+                <TeamDot color={seat.color} />
                 <span className="min-w-0 flex-1 truncate font-body text-cream">{seat.name}</span>
                 {seat.isTied && <Badge tone="amber">Tie</Badge>}
                 <span className="nums text-lg text-gilt">{seat.totalPoints}</span>

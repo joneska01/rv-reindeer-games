@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useApi } from "@/lib/hooks/useApi";
+import { useApi, jsonInit } from "@/lib/hooks/useApi";
 import { Panel } from "@/components/shared/Panel";
 import { Badge } from "@/components/shared/Badge";
 import { Button, buttonClass } from "@/components/shared/Button";
 import { cn } from "@/lib/cn";
+import { ErrorNote } from "@/components/shared/ErrorNote";
+import { Input, Select } from "@/components/shared/Input";
 
 export interface YearRow {
   id: string;
@@ -34,15 +36,10 @@ export function YearManager({ years }: { years: YearRow[] }) {
       return;
     }
     setCreating(true);
-    const okRes = await call("/api/admin/years", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        year: n,
-        isTest,
-        copyTeamsFromYearId: copyFrom || undefined,
-      }),
-    });
+    const okRes = await call(
+      "/api/admin/years",
+      jsonInit("POST", { year: n, isTest, copyTeamsFromYearId: copyFrom || undefined }),
+    );
     setCreating(false);
     if (okRes) {
       setYearNum("");
@@ -52,11 +49,7 @@ export function YearManager({ years }: { years: YearRow[] }) {
   }
 
   async function setActive(id: string) {
-    await call(`/api/admin/years/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isActive: true }),
-    });
+    await call(`/api/admin/years/${id}`, jsonInit("PATCH", { isActive: true }));
   }
 
   async function deleteYear(row: YearRow) {
@@ -69,15 +62,12 @@ export function YearManager({ years }: { years: YearRow[] }) {
     await call(`/api/admin/years/${row.id}`, { method: "DELETE" });
   }
 
-  const inputClass =
-    "h-11 rounded-card border border-gilt bg-forest-deep/60 px-3 font-body text-cream outline-none focus:border-gilt-strong placeholder:text-cream/30";
-
   return (
     <div className="space-y-6">
       {error && (
-        <p className="rounded-card border border-cranberry/50 bg-cranberry/15 px-4 py-2.5 text-sm text-cream">
+        <ErrorNote>
           {error}
-        </p>
+        </ErrorNote>
       )}
 
       {/* Create */}
@@ -85,21 +75,23 @@ export function YearManager({ years }: { years: YearRow[] }) {
         <form onSubmit={createYear} className="flex flex-wrap items-end gap-4">
           <label className="flex flex-col gap-1.5">
             <span className="eyebrow">Year</span>
-            <input
+            <Input
+              tall
               type="number"
               value={yearNum}
               onChange={(e) => setYearNum(e.target.value)}
               placeholder="2026"
-              className={cn(inputClass, "w-28")}
+              className="w-28"
             />
           </label>
 
           <label className="flex flex-col gap-1.5">
             <span className="eyebrow">Copy teams from</span>
-            <select
+            <Select
+              tall
               value={copyFrom}
               onChange={(e) => setCopyFrom(e.target.value)}
-              className={cn(inputClass, "w-44")}
+              className="w-44"
             >
               <option value="">— none —</option>
               {years.map((y) => (
@@ -107,7 +99,7 @@ export function YearManager({ years }: { years: YearRow[] }) {
                   {y.year}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
 
           <label className="flex h-11 items-center gap-2 text-sm text-cream/80">

@@ -6,7 +6,10 @@ import { Badge } from "@/components/shared/Badge";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/cn";
 import { useApi, jsonInit } from "@/lib/hooks/useApi";
-import type { LiveGameVM, LiveTeamVM, LiveScoreVM } from "./types";
+import type { GameVM, TeamVM } from "@/lib/view-models";
+import type { LiveScoreVM } from "./types";
+import { TeamDot } from "@/components/shared/TeamDot";
+import { ErrorNote } from "@/components/shared/ErrorNote";
 
 const inputClass =
   "h-10 w-20 sm:w-24 rounded-card border border-gilt bg-forest-deep/60 px-3 text-right font-mono text-cream outline-none focus:border-gilt-strong placeholder:text-cream/25";
@@ -23,8 +26,8 @@ export function ScoreEntry({
   teams,
   scores,
 }: {
-  game: LiveGameVM;
-  teams: LiveTeamVM[];
+  game: GameVM;
+  teams: TeamVM[];
   scores: LiveScoreVM[];
 }) {
   const { call, error } = useApi();
@@ -98,9 +101,9 @@ export function ScoreEntry({
       />
 
       {error && (
-        <p className="mt-3 rounded-card border border-cranberry/50 bg-cranberry/15 px-4 py-2.5 text-sm text-cream">
+        <ErrorNote className="mt-3">
           {error}
-        </p>
+        </ErrorNote>
       )}
 
       <div className="mt-3 space-y-2">
@@ -118,10 +121,7 @@ export function ScoreEntry({
             key={t.id}
             className="frame-gilt flex items-center gap-3 rounded-card bg-panel/60 px-3 py-2"
           >
-            <span
-              className="size-3.5 shrink-0 rounded-full ring-1 ring-cream/20"
-              style={{ backgroundColor: t.color }}
-            />
+            <TeamDot color={t.color} />
             <span className="min-w-0 flex-1 truncate font-body text-cream">{t.name}</span>
             {rounds.map((r) => (
               <input
