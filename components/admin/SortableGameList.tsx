@@ -37,14 +37,19 @@ export function SortableGameList({
   onRemove: (g: GameVM) => void;
   onReorder: (orderedIds: string[]) => void;
 }) {
-  // Keep a local order for snappy drag; re-sync when the server list changes.
+  // Always render the server's current game data (so an edit shows up at once).
+  // After a drag, hold the new order locally until the server list catches up —
+  // i.e. until its id order changes — so the row doesn't snap back meanwhile.
   const ids = games.map((g) => g.id).join(",");
-  const [items, setItems] = useState(games);
+  const [order, setOrder] = useState<string[] | null>(null);
   const [prevIds, setPrevIds] = useState(ids);
   if (ids !== prevIds) {
-    setItems(games);
+    setOrder(null);
     setPrevIds(ids);
   }
+  const items = order
+    ? order.flatMap((id) => games.find((g) => g.id === id) ?? [])
+    : games;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -56,9 +61,9 @@ export function SortableGameList({
     if (!over || active.id === over.id) return;
     const oldIndex = items.findIndex((g) => g.id === active.id);
     const newIndex = items.findIndex((g) => g.id === over.id);
-    const next = arrayMove(items, oldIndex, newIndex);
-    setItems(next);
-    onReorder(next.map((g) => g.id));
+    const next = arrayMove(items, oldIndex, newIndex).map((g) => g.id);
+    setOrder(next);
+    onReorder(next);
   }
 
   return (
