@@ -42,3 +42,30 @@ export function isUniqueViolation(e: unknown): boolean {
   const code = (err: unknown) => (err as { code?: string } | null)?.code;
   return code(e) === '23505' || code((e as { cause?: unknown } | null)?.cause) === '23505';
 }
+
+/**
+ * An error a route (or a guard helper) wants turned into a specific JSON
+ * response. Throw it from anywhere inside an `adminRoute` handler.
+ */
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+/** Throws the standard 423 when an edition is locked. Pure — takes the year row. */
+export function assertUnlocked(year: { isLocked: boolean }): void {
+  if (year.isLocked) throw new ApiError(423, 'This edition is locked.');
+}
+
+/** ApiError → its own status + message; anything else → a JSON 500 (never an
+ *  HTML error page, which the client's fetch helper can't read). */
+export function toErrorResponse(e: unknown): NextResponse {
+  if (e instanceof ApiError) return fail(e.message, e.status);
+  console.error(e);
+  return fail('Something went wrong on the server. Try again.', 500);
+}

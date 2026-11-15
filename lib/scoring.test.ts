@@ -3,6 +3,7 @@ import {
   computeGameRankings,
   computeLeaderboard,
   applyTieBreakers,
+  computeStandings,
 } from '@/lib/scoring';
 import type { Game, Score, Team, PartyFoul, CostumeVote } from '@/db/schema';
 import {
@@ -432,5 +433,31 @@ describe('scoring engine reproduces 2023 documented standings', () => {
       const r = ranked.find((e) => e.teamId === t.name)!;
       expect(r.rank, t.name).toBe(t.final_rank);
     }
+  });
+});
+
+describe('computeStandings (rank each game once)', () => {
+  it('gives exactly what computeLeaderboard + applyTieBreakers give separately', () => {
+    const teams = ['A', 'B', 'C', 'D'].map((n) => team(n));
+    const games = [
+      game({ id: 'g1', sortOrder: 1, completedAt: new Date('2026-01-01T10:00:00Z') }),
+      game({ id: 'g2', sortOrder: 2, scoreType: 'low_wins', completedAt: new Date('2026-01-01T11:00:00Z') }),
+      game({ id: 'g3', sortOrder: 3, numRounds: 2, completedAt: new Date('2026-01-01T12:00:00Z') }),
+      game({ id: 'costume', sortOrder: 4, scoreSource: 'voting', completedAt: new Date('2026-01-01T13:00:00Z') }),
+      game({ id: 'live', sortOrder: 5, isComplete: false }), // never counts
+    ];
+    const scores = [
+      score('g1', 'A', 10), score('g1', 'B', 10), score('g1', 'C', 7), score('g1', 'D', 3),
+      score('g2', 'A', 30), score('g2', 'B', 25), score('g2', 'C', 25), score('g2', 'D', 40),
+      score('g3', 'A', 5, 1), score('g3', 'A', 6, 2), score('g3', 'C', 9, 1), score('g3', 'C', 1, 2),
+      score('live', 'A', 99),
+    ];
+    const votes = [vote('A', 'B', 'C', 'D'), vote('B', 'C', 'B', 'A')];
+    const fouls = [foul('D'), foul('D'), foul('A')];
+
+    const leaderboard = computeLeaderboard(games, scores, votes, teams, fouls);
+    const ranked = applyTieBreakers(teams, leaderboard, games, scores, votes);
+
+    expect(computeStandings(games, scores, votes, teams, fouls)).toEqual({ leaderboard, ranked });
   });
 });

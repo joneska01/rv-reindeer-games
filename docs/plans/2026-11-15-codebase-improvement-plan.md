@@ -155,6 +155,8 @@ from a phone, lock, podium reveal) with screenshots.
 
 ## Phase 2 — Simplify the server
 
+> **Status: done** (branch `refactor/phase-2-server`). Deviations from the table below: `adminRoute()` lives in `lib/admin-route.ts` (keeps `lib/api.ts` free of `next/headers` so Vitest can import it); guards *throw* `ApiError` rather than returning responses; a fourth/fifth guard (`editableTeam`, `editableFoul`) was added because those routes had the same hand-written pattern; 2.4 adds `computeStandings` and leaves the active game's one-off ranking alone (it is never complete, so there is nothing to reuse).
+
 Pure refactor. No behavior change; the same requests return the same responses.
 
 | # | Change | Why |

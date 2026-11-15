@@ -152,15 +152,18 @@ The host drives all of this from the **Awards** tab (`components/admin/ClosingCo
 
 | File | Role | Notes |
 |---|---|---|
-| `scoring.ts` | **The engine.** `computeLeaderboard`, `computeGameRankings`, `applyTieBreakers`. | Pure. Unit-tested. Change scoring rules here only. |
+| `scoring.ts` | **The engine.** `computeLeaderboard`, `computeGameRankings`, `applyTieBreakers`, and `computeStandings` (both in one pass). | Pure. Unit-tested. Change scoring rules here only. Each completed game is ranked once and shared. |
 | `scoring-kinds.ts` | Maps the admin's "Count / Timing / Voting" dropdown ↔ stored `score_type`/`score_source`/`score_unit`. | Shared by both game forms. |
 | `scoreboard.ts` | `buildScoreboard()` — shapes the public TV JSON payload. | Used by the page (SSR) and `/api/scoreboard`. |
-| `live.ts` | `getLiveData()` (one DB pass for the live console) + `rankStandings()` (runs the engine). | Shared by Live and Awards pages. |
+| `live.ts` | `getLiveData()` (one parallel DB pass — five queries, one round trip) + `rankStandings()` (calls `computeStandings`). | Shared by Live, Awards and the TV scoreboard. |
 | `voting.ts` | `getVotingState()` + `openVotingGame()` — is voting open, and for whom. | Shared by `/vote` page and API. |
 | `years.ts`, `setup.ts` | Server-only DB queries for editions, teams, games, library. | `import 'server-only'`. |
 | `historical.ts` | Loads the museum JSON fixtures (display-only). | Past years are NOT recomputed. |
-| `auth.ts` | iron-session: `getSession`, `requireAdmin` (wraps API handlers). | One shared `ADMIN_PASSWORD`. |
-| `api.ts` | `ok()`, `fail()`, `parseBody()` (Zod) — the standard response/validation helpers. | Every API route uses these. |
+| `auth.ts` | iron-session: `getSession`. | One shared `ADMIN_PASSWORD`. |
+| `admin-route.ts` | `adminRoute()` — wraps every admin API handler: 401 if not signed in, and any thrown error comes back as JSON (never an HTML error page). | Pass route params as a type argument: `adminRoute<{ id: string }>(…)`. |
+| `guards.ts` | `editableYear / editableGame / editableTeam / editableFoul` — load the row **and** its edition in one query; throw 404 if missing, 423 if the edition is locked. | Every write route that edits edition data goes through one. |
+| `schemas.ts` | Shared Zod request-body schemas (games, library, teams, years). Enum values come from `db/schema.ts`. | PATCH schemas are built from default-free fields — see the comment in the file. |
+| `api.ts` | `ok()`, `fail()`, `parseBody()` (Zod), `ApiError`, `assertUnlocked()`, `toErrorResponse()`, `isUniqueViolation()` — pure response/error helpers. | No DB or `next/headers` imports, so Vitest can load it. |
 | `db.ts`, `db-url.ts` | Drizzle client + resilient connection-string resolution. | See §10. |
 | `copy.ts` | Centralized witty copy (idle lines, vote confirmations, the "Naughty List"). | Keep the voice consistent here. |
 | `cn.ts` | `cn(...)` — merge Tailwind class strings. | |
@@ -209,9 +212,15 @@ the `.animate-*` class. ⚠️ See the Turbopack note in §11.
 **Change colors / fonts:** the `@theme` block at the top of `app/globals.css`
 (e.g. `--color-gold`) and `app/layout.tsx` (font imports).
 
-**Add an admin write endpoint:** copy an existing route under `app/api/admin/`,
-wrap the handler in `requireAdmin`, validate with `parseBody` + a Zod schema, and
-return via `ok`/`fail`.
+**Add an admin write endpoint:** copy an existing route under `app/api/admin/`.
+Export the handler as `adminRoute(async (req) => { … })`, validate with `parseBody`
++ a schema from `lib/schemas.ts`, call the matching `editable…()` guard if it edits
+an edition (that's your lock check), and return via `ok`/`fail`. To bail out with a
+specific status from deep inside, `throw new ApiError(status, message)`.
+
+**Add a game-scoring option (new score type/source/round rule):** add the value to
+the enum in `db/schema.ts` (then `drizzle-kit generate` + `migrate`); the Zod schemas
+pick it up automatically. UI labels live in `lib/scoring-kinds.ts`.
 
 ## 10. Testing & verification
 
