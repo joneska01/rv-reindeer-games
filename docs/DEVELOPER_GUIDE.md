@@ -139,7 +139,7 @@ active & has_started & display_mode:
   (in `/api/admin/live/active-game`). It never reverts on its own — so once the
   games begin, the TV won't bounce back to the welcome screen between games. A
   **Rehearsal Reset** sets it back to `false`.
-- **`active_game_id`** is the single "now playing" game. Setting a new one replaces
+- **`active_game_id`** (FK to `games`, `ON DELETE SET NULL`) is the single "now playing" game. Setting a new one replaces
   the old. When set, the split view's right panel is `NowPlaying`; when null, it's
   the `Intermission` filler.
 - **Finish & Lock** (`/api/admin/live/finish`) freezes editing and drops the TV to
@@ -241,6 +241,16 @@ return via `ok`/`fail`.
   The public TV/vote pages keep working; only admin login fails.
 - **Older requirements docs live in `docs/archive/`.** The current spec is
   `RV-Reindeer-Games-PRD-v3.md` plus the v3.1 deltas design doc.
+- **Admin mutations go through `useApi`** (`lib/hooks/useApi.ts`): one fetch helper with
+  busy/error state that always clears, even on a network failure. Don't hand-roll another.
+  Panels that must reflect *other people's* actions use `useAutoRefresh`.
+- **Score inputs keep unsaved drafts across refreshes.** `ScoreEntry` drops a draft only
+  once the server value matches it — don't reset drafts wholesale or the host's typing
+  in a neighbouring cell will vanish.
+- **⚠️ Local dev and production share one database.** Never set a test year *active*
+  locally while a real edition is live — activating one deactivates the other, and the
+  public TV scoreboard flips to the test year. Rehearse only when the real edition isn't
+  the active one (or after the event).
 - **Never print the admin password** in logs/terminal. To test admin pages, mint an
   iron-session cookie from `SESSION_SECRET` instead of typing the password.
 - **Museum years are frozen.** `seed-data/*.json` are display-only and intentionally

@@ -31,7 +31,7 @@ Copy `.env.local.example` to `.env.local` and fill in:
 - **Single scoring engine** at `/lib/scoring.ts` — pure functions, zero DB calls. All API routes and components import from here. Never duplicate scoring logic.
 - **`active_game_id` on the Year row** is the single source of truth for which game is active. Setting a new active game must atomically clear the previous one.
 - **Only completed games** (`is_complete = true`) contribute to the overall leaderboard. The active game's scores appear only in the right panel.
-- **HTTP polling** — scoreboard polls every 8s, votes every 10s. No WebSockets.
+- **HTTP polling** — scoreboard polls every 8s, votes every 10s; the admin Live console `router.refresh()`es every 10s (`lib/hooks/useAutoRefresh.ts`, paused when the tab is hidden). No WebSockets.
 - **`/scoreboard` never navigates** — all three display modes (split view, podium, final results) render at this single URL, driven by `Year.display_mode`.
 
 ## Scoring Engine Contract (`/lib/scoring.ts`)
@@ -45,6 +45,8 @@ applyTieBreakers(teams, leaderboard, games, scores, votes): RankedTeam[]
 Points table: 1st=30, 2nd=28, 3rd=26, 4th=24 … 16th+=1. Tied teams share the higher place; next distinct score skips consumed places.
 
 Party fouls: each `PartyFoul` row = −1 from team total. Count rows, don't use a stored counter.
+
+Tie-breakers cascade: each step splits a tied group and only teams still level continue to the next step (so a step that separates just some teams still counts). Step 4 uses the last game *completed* (`completed_at`), not sort order. Teams still level after step 4 are flagged `unresolvedTie` for the host to settle.
 
 Costume Contest tie-breaker: excluded from step 1 (game wins) but included in step 2 (top-3 finishes).
 

@@ -35,3 +35,10 @@ export async function parseBody<T>(
     return { response: fail('Invalid body.', 422) };
   }
 }
+
+/** True when a DB error is a Postgres unique-constraint violation (23505).
+ *  Drizzle wraps driver errors, so the code may live on `cause`. */
+export function isUniqueViolation(e: unknown): boolean {
+  const code = (err: unknown) => (err as { code?: string } | null)?.code;
+  return code(e) === '23505' || code((e as { cause?: unknown } | null)?.cause) === '23505';
+}

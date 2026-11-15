@@ -8,10 +8,8 @@ import { eq } from 'drizzle-orm';
 
 const patchSchema = z.object({
   isActive: z.boolean().optional(),
-  isLocked: z.boolean().optional(),
   displayMode: z.enum(['scoreboard', 'podium', 'final_results']).optional(),
   podiumState: z.enum(['hidden', 'show_third', 'show_second', 'show_first', 'show_all']).optional(),
-  activeGameId: z.string().uuid().nullable().optional(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -34,10 +32,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const rest: Partial<typeof years.$inferInsert> = {};
     if (body.isActive === false) rest.isActive = false;
-    if (body.isLocked !== undefined) rest.isLocked = body.isLocked;
     if (body.displayMode !== undefined) rest.displayMode = body.displayMode;
     if (body.podiumState !== undefined) rest.podiumState = body.podiumState;
-    if (body.activeGameId !== undefined) rest.activeGameId = body.activeGameId;
 
     if (Object.keys(rest).length > 0) {
       await db.update(years).set(rest).where(eq(years.id, id));

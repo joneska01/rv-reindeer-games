@@ -127,7 +127,7 @@ export default async function LivePage() {
         <Panel tone="soft" className="ring-1 ring-cranberry/40">
           <p className="text-sm text-cream">
             This edition is locked — the results are final and editing is disabled. Reopen
-            it from Setup to make changes.
+            it from Closing to make changes.
           </p>
         </Panel>
       )}
