@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useApi } from "@/lib/hooks/useApi";
 import { Panel } from "@/components/shared/Panel";
 import { Button } from "@/components/shared/Button";
 
 export function ResetEditionButton({ yearId, year }: { yearId: string; year: number }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { call, busy, error } = useApi();
 
   async function reset() {
     if (
@@ -17,16 +14,7 @@ export function ResetEditionButton({ yearId, year }: { yearId: string; year: num
       )
     )
       return;
-    setBusy(true);
-    setError(null);
-    const res = await fetch(`/api/admin/years/${yearId}/reset`, { method: "POST" });
-    setBusy(false);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Something went wrong.");
-      return;
-    }
-    router.refresh();
+    await call(`/api/admin/years/${yearId}/reset`, { method: "POST" });
   }
 
   return (

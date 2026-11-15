@@ -6,7 +6,7 @@ import { Button } from "@/components/shared/Button";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/cn";
 import { NAUGHTY } from "@/lib/copy";
-import { useApi, jsonInit } from "./useApi";
+import { useApi, jsonInit } from "@/lib/hooks/useApi";
 import type { LiveTeamVM, LiveFoulVM } from "./types";
 
 export function NaughtyList({

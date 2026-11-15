@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/auth';
-import { ok, fail, parseBody } from '@/lib/api';
+import { ok, fail, parseBody, isUniqueViolation } from '@/lib/api';
 import { db } from '@/lib/db';
 import { teams } from '@/db/schema';
 import { getYear } from '@/lib/years';
@@ -33,8 +33,9 @@ export async function POST(req: NextRequest) {
     try {
       const [created] = await db.insert(teams).values({ yearId, name, displayColor }).returning();
       return ok(created, 201);
-    } catch {
-      return fail(`A team named "${name}" already exists this year.`, 409);
+    } catch (e) {
+      if (isUniqueViolation(e)) return fail(`A team named "${name}" already exists this year.`, 409);
+      throw e;
     }
   });
 }

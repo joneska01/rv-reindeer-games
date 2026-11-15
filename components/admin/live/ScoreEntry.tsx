@@ -5,11 +5,18 @@ import { Panel } from "@/components/shared/Panel";
 import { Badge } from "@/components/shared/Badge";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/cn";
-import { useApi, jsonInit } from "./useApi";
+import { useApi, jsonInit } from "@/lib/hooks/useApi";
 import type { LiveGameVM, LiveTeamVM, LiveScoreVM } from "./types";
 
 const inputClass =
   "h-10 w-20 sm:w-24 rounded-card border border-gilt bg-forest-deep/60 px-3 text-right font-mono text-cream outline-none focus:border-gilt-strong placeholder:text-cream/25";
+
+/** Does a typed value match what the server holds? ("5.0" equals "5"; blank equals blank.) */
+function sameScore(typed: string, server: string): boolean {
+  const t = typed.trim();
+  if (t === server) return true;
+  return t !== "" && server !== "" && Number(t) === Number(server);
+}
 
 export function ScoreEntry({
   game,
@@ -20,7 +27,7 @@ export function ScoreEntry({
   teams: LiveTeamVM[];
   scores: LiveScoreVM[];
 }) {
-  const { call, busy, error } = useApi();
+  const { call, error } = useApi();
 
   // server value lookup: `${teamId}:${round}` → string
   const serverVal = (teamId: string, round: number) => {
@@ -28,7 +35,9 @@ export function ScoreEntry({
     return s ? String(s.value) : "";
   };
 
-  // Local draft, re-synced when the server score set changes.
+  // Local draft, reconciled when the server score set changes. Only cells the
+  // server now agrees with are dropped — a cell the host is still typing in
+  // (not yet saved) must survive a refresh triggered by a neighbouring save.
   const signature = scores
     .map((s) => `${s.teamId}:${s.round}=${s.value}`)
     .sort()
@@ -37,7 +46,14 @@ export function ScoreEntry({
   const [draft, setDraft] = useState<Record<string, string>>({});
   if (signature !== prevSig) {
     setPrevSig(signature);
-    setDraft({});
+    setDraft((d) =>
+      Object.fromEntries(
+        Object.entries(d).filter(([k, v]) => {
+          const [t, r] = k.split(":");
+          return !sameScore(v, serverVal(t, Number(r)));
+        }),
+      ),
+    );
   }
 
   const key = (teamId: string, round: number) => `${teamId}:${round}`;
@@ -48,7 +64,7 @@ export function ScoreEntry({
 
   async function commit(teamId: string, round: number) {
     const raw = valueOf(teamId, round).trim();
-    if (raw === serverVal(teamId, round)) return; // unchanged
+    if (sameScore(raw, serverVal(teamId, round))) return; // unchanged
 
     if (raw === "") {
       await call("/api/admin/scores", jsonInit("DELETE", { gameId: game.id, teamId, round }));
@@ -115,7 +131,6 @@ export function ScoreEntry({
                 step={isTiming ? "0.01" : "1"}
                 min="0"
                 value={valueOf(t.id, r)}
-                disabled={busy}
                 onChange={(e) =>
                   setDraft((d) => ({ ...d, [key(t.id, r)]: e.target.value }))
                 }

@@ -223,6 +223,21 @@ export function computeLeaderboard(
   });
 }
 
+/** The game finished most recently. Falls back to list order when no
+ *  completion times are recorded (the PRD says "last game marked complete"). */
+function lastCompletedGame(completed: Game[]): Game | undefined {
+  let last: Game | undefined;
+  for (const g of completed) {
+    if (!last) last = g;
+    else if (g.completedAt && last.completedAt) {
+      if (g.completedAt >= last.completedAt) last = g;
+    } else if (!last.completedAt || !g.completedAt) {
+      last = g; // can't compare — later in the list wins
+    }
+  }
+  return last;
+}
+
 export function applyTieBreakers(
   teams: Team[],
   leaderboard: LeaderboardResult,
@@ -231,78 +246,61 @@ export function applyTieBreakers(
   votes: CostumeVote[],
 ): RankedTeam[] {
   const completedGames = games.filter((g) => g.isComplete);
-  const costumeContestGame = completedGames.find(
-    (g) => g.scoreSource === 'voting',
-  );
   const skillGames = completedGames.filter((g) => g.scoreSource !== 'voting');
 
-  // Build per-team game ranking data for tie-breaking
-  const gameRankingsMap = new Map<string, Map<string, number>>(); // gameId → teamId → place
+  // gameId → teamId → place, for every completed game.
+  const places = new Map<string, Map<string, number>>();
   for (const game of completedGames) {
     const { rankings } = computeGameRankings(game, scores, votes, teams);
-    const placeMap = new Map<string, number>();
-    for (const r of rankings) {
-      placeMap.set(r.teamId, r.place);
-    }
-    gameRankingsMap.set(game.id, placeMap);
+    places.set(game.id, new Map(rankings.map((r) => [r.teamId, r.place])));
   }
+  const placeIn = (g: Game, teamId: string) => places.get(g.id)?.get(teamId);
+  const byTeam = new Map(leaderboard.map((e) => [e.teamId, e]));
+  const lastGame = lastCompletedGame(completedGames);
 
-  // Sort leaderboard descending by total points, then apply tie-breakers
+  // Tie-break steps, in PRD order. Each maps a team to a number where
+  // HIGHER is better; a step that separates only some teams still counts.
+  const steps: Array<(teamId: string) => number> = [
+    // 1. Most game wins (Costume Contest excluded — non-skill game)
+    (id) => skillGames.filter((g) => placeIn(g, id) === 1).length,
+    // 2. Most top-3 finishes (Costume Contest included)
+    (id) => completedGames.filter((g) => (placeIn(g, id) ?? Infinity) <= 3).length,
+    // 3. Fewest party fouls
+    (id) => -(byTeam.get(id)?.partyFoulCount ?? 0),
+    // 4. Better placement in the last completed game
+    (id) => (lastGame ? -(placeIn(lastGame, id) ?? 999) : 0),
+  ];
+
   const sorted = [...leaderboard].sort((a, b) => b.totalPoints - a.totalPoints);
-
   const result: RankedTeam[] = [];
   let place = 1;
   let i = 0;
 
   while (i < sorted.length) {
-    const currentPoints = sorted[i].totalPoints;
-    // Collect all teams with this point total
-    const group: LeaderboardEntry[] = [];
-    while (i < sorted.length && sorted[i].totalPoints === currentPoints) {
-      group.push(sorted[i]);
+    const points = sorted[i].totalPoints;
+    const group: string[] = [];
+    while (i < sorted.length && sorted[i].totalPoints === points) {
+      group.push(sorted[i].teamId);
       i++;
     }
 
-    if (group.length === 1) {
-      const entry = group[0];
-      result.push({
-        teamId: entry.teamId,
-        rank: place,
-        totalPoints: entry.totalPoints,
-        partyFoulCount: entry.partyFoulCount,
-        gamesCompleted: entry.gamesCompleted,
-        isTied: false,
-        unresolvedTie: false,
-      });
-      place++;
-      continue;
-    }
-
-    // Tie-break within group
-    const broken = breakTie(group, teams, skillGames, completedGames, costumeContestGame, gameRankingsMap);
-
+    // Best-first sub-groups. Teams still level after step 4 are step-5 ties
+    // that need the host to settle them by hand.
     let subPlace = place;
-    let subI = 0;
-    while (subI < broken.length) {
-      const subScore = broken[subI].tieBreakScore;
-      const subGroup: typeof broken = [];
-      while (subI < broken.length && broken[subI].tieBreakScore === subScore) {
-        subGroup.push(broken[subI]);
-        subI++;
-      }
-      const isUnresolved = broken[0].step === 5 && subGroup.length > 1;
-      for (const t of subGroup) {
+    for (const sub of resolveTies(group, steps)) {
+      for (const teamId of sub) {
+        const entry = byTeam.get(teamId)!;
         result.push({
-          teamId: t.teamId,
+          teamId,
           rank: subPlace,
-          totalPoints: currentPoints,
-          partyFoulCount: leaderboard.find((e) => e.teamId === t.teamId)!.partyFoulCount,
-          gamesCompleted: leaderboard.find((e) => e.teamId === t.teamId)!.gamesCompleted,
-          isTied: subGroup.length > 1,
-          unresolvedTie: isUnresolved,
+          totalPoints: points,
+          partyFoulCount: entry.partyFoulCount,
+          gamesCompleted: entry.gamesCompleted,
+          isTied: sub.length > 1,
+          unresolvedTie: sub.length > 1,
         });
       }
-      subPlace += subGroup.length;
+      subPlace += sub.length;
     }
     place += group.length;
   }
@@ -310,71 +308,17 @@ export function applyTieBreakers(
   return result;
 }
 
-// ── Internal tie-breaker logic ────────────────────────────────────────────────
-
-interface TieBreakEntry {
-  teamId: string;
-  tieBreakScore: number;
-  step: number;
-}
-
-function breakTie(
-  group: LeaderboardEntry[],
-  teams: Team[],
-  skillGames: Game[],
-  allCompletedGames: Game[],
-  costumeContestGame: Game | undefined,
-  gameRankingsMap: Map<string, Map<string, number>>,
-): TieBreakEntry[] {
-  // Step 1: Most game wins (1st place finishes), Costume Contest excluded
-  const step1 = group.map((e) => {
-    const wins = skillGames.filter((g) => {
-      const placeMap = gameRankingsMap.get(g.id);
-      return placeMap?.get(e.teamId) === 1;
-    }).length;
-    return { teamId: e.teamId, tieBreakScore: wins, step: 1 };
-  });
-  if (areDistinct(step1)) return sortDesc(step1);
-
-  // Step 2: Most top-3 finishes (all games including Costume Contest)
-  const step2 = group.map((e) => {
-    const top3 = allCompletedGames.filter((g) => {
-      const placeMap = gameRankingsMap.get(g.id);
-      const p = placeMap?.get(e.teamId);
-      return p !== undefined && p <= 3;
-    }).length;
-    return { teamId: e.teamId, tieBreakScore: top3, step: 2 };
-  });
-  if (areDistinct(step2)) return sortDesc(step2);
-
-  // Step 3: Fewest party fouls (negate so higher = better)
-  const step3 = group.map((e) => ({
-    teamId: e.teamId,
-    tieBreakScore: -e.partyFoulCount,
-    step: 3,
-  }));
-  if (areDistinct(step3)) return sortDesc(step3);
-
-  // Step 4: Higher placement in the last completed game
-  const lastGame = allCompletedGames[allCompletedGames.length - 1];
-  if (lastGame) {
-    const lastPlaceMap = gameRankingsMap.get(lastGame.id);
-    const step4 = group.map((e) => {
-      const place = lastPlaceMap?.get(e.teamId) ?? 999;
-      return { teamId: e.teamId, tieBreakScore: -place, step: 4 }; // negate: lower place = higher score
-    });
-    if (areDistinct(step4)) return sortDesc(step4);
+/** Split tied teams into best-first sub-groups, recursing into each
+ *  still-level sub-group with the remaining steps. */
+function resolveTies(ids: string[], steps: Array<(teamId: string) => number>): string[][] {
+  if (ids.length <= 1 || steps.length === 0) return [ids];
+  const [step, ...rest] = steps;
+  const buckets = new Map<number, string[]>();
+  for (const id of ids) {
+    const v = step(id);
+    buckets.set(v, [...(buckets.get(v) ?? []), id]);
   }
-
-  // Step 5: Unresolved — manual admin resolution required
-  return group.map((e) => ({ teamId: e.teamId, tieBreakScore: 0, step: 5 }));
-}
-
-function areDistinct(entries: TieBreakEntry[]): boolean {
-  const scores = entries.map((e) => e.tieBreakScore);
-  return new Set(scores).size === scores.length;
-}
-
-function sortDesc(entries: TieBreakEntry[]): TieBreakEntry[] {
-  return [...entries].sort((a, b) => b.tieBreakScore - a.tieBreakScore);
+  return [...buckets.entries()]
+    .sort(([a], [b]) => b - a)
+    .flatMap(([, members]) => resolveTies(members, rest));
 }

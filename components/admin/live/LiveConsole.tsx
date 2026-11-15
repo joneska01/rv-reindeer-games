@@ -1,6 +1,7 @@
 "use client";
 
 import { Panel } from "@/components/shared/Panel";
+import { useAutoRefresh } from "@/lib/hooks/useAutoRefresh";
 import { GameControl } from "./GameControl";
 import { ScoreEntry } from "./ScoreEntry";
 import { CostumeMonitor } from "./CostumeMonitor";
@@ -36,6 +37,9 @@ export function LiveConsole({
   activeGameId: string | null;
   voteTally: VoteTallyVM;
 }) {
+  // Phones vote and other hosts edit while this is open — keep it current.
+  useAutoRefresh(10_000);
+
   const activeGame = games.find((g) => g.id === activeGameId) ?? null;
   const activeScores = activeGame
     ? scores.filter((s) => s.gameId === activeGame.id)

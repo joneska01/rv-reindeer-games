@@ -26,6 +26,7 @@ export default async function YearSetupPage({ params }: { params: Promise<{ id: 
   const gameRows: GameRow[] = games.map((g) => ({
     id: g.id,
     name: g.name,
+    scoringDescription: g.scoringDescription,
     scoreType: g.scoreType,
     scoreSource: g.scoreSource,
     scoreUnit: g.scoreUnit,

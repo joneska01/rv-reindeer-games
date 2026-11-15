@@ -9,6 +9,7 @@ import {
   numeric,
   unique,
   index,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 
 // ── Enums ──────────────────────────────────────────────────────────────────
@@ -47,7 +48,11 @@ export const years = pgTable('years', {
   // True once any game has been set active — flips the TV from the welcome
   // screen to the live board, and never reverts (until a rehearsal reset).
   hasStarted: boolean('has_started').notNull().default(false),
-  activeGameId: uuid('active_game_id'), // FK to games — set after games table exists
+  // FK to games. The callback is lazy (games is declared below); SET NULL means
+  // deleting the live game can never leave a dangling pointer.
+  activeGameId: uuid('active_game_id').references((): AnyPgColumn => games.id, {
+    onDelete: 'set null',
+  }),
   displayMode: displayModeEnum('display_mode').notNull().default('scoreboard'),
   podiumState: podiumStateEnum('podium_state').notNull().default('hidden'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

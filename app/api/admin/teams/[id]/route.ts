@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/auth';
-import { ok, fail, parseBody } from '@/lib/api';
+import { ok, fail, parseBody, isUniqueViolation } from '@/lib/api';
 import { db } from '@/lib/db';
 import { teams } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -32,8 +32,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     try {
       const [updated] = await db.update(teams).set(parsed.data).where(eq(teams.id, id)).returning();
       return ok(updated);
-    } catch {
-      return fail('A team with that name already exists this year.', 409);
+    } catch (e) {
+      if (isUniqueViolation(e)) return fail('A team with that name already exists this year.', 409);
+      throw e;
     }
   });
 }

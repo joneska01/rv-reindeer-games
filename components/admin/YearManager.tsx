@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useApi } from "@/lib/hooks/useApi";
 import { Panel } from "@/components/shared/Panel";
 import { Badge } from "@/components/shared/Badge";
 import { Button, buttonClass } from "@/components/shared/Button";
@@ -18,27 +18,13 @@ export interface YearRow {
 }
 
 export function YearManager({ years }: { years: YearRow[] }) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const { call, busy, error, setError } = useApi();
 
   // Create form
   const [yearNum, setYearNum] = useState("");
   const [isTest, setIsTest] = useState(false);
   const [copyFrom, setCopyFrom] = useState("");
   const [creating, setCreating] = useState(false);
-
-  async function call(url: string, init: RequestInit): Promise<boolean> {
-    setError(null);
-    const res = await fetch(url, init);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Something went wrong.");
-      return false;
-    }
-    router.refresh();
-    return true;
-  }
 
   async function createYear(e: React.FormEvent) {
     e.preventDefault();
@@ -66,13 +52,11 @@ export function YearManager({ years }: { years: YearRow[] }) {
   }
 
   async function setActive(id: string) {
-    setBusyId(id);
     await call(`/api/admin/years/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isActive: true }),
     });
-    setBusyId(null);
   }
 
   async function deleteYear(row: YearRow) {
@@ -82,9 +66,7 @@ export function YearManager({ years }: { years: YearRow[] }) {
       )
     )
       return;
-    setBusyId(row.id);
     await call(`/api/admin/years/${row.id}`, { method: "DELETE" });
-    setBusyId(null);
   }
 
   const inputClass =
@@ -178,7 +160,7 @@ export function YearManager({ years }: { years: YearRow[] }) {
                   variant="ghost"
                   size="sm"
                   onClick={() => setActive(y.id)}
-                  disabled={busyId === y.id}
+                  disabled={busy}
                 >
                   Set Active
                 </Button>
@@ -188,7 +170,7 @@ export function YearManager({ years }: { years: YearRow[] }) {
                   variant="naughty"
                   size="sm"
                   onClick={() => deleteYear(y)}
-                  disabled={busyId === y.id}
+                  disabled={busy}
                 >
                   Delete
                 </Button>

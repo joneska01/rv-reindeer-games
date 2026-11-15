@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useApi } from "@/lib/hooks/useApi";
 import { Panel } from "@/components/shared/Panel";
 import { Button } from "@/components/shared/Button";
 import { Badge } from "@/components/shared/Badge";
@@ -40,29 +40,13 @@ const inputClass =
   "h-10 rounded-card border border-gilt bg-forest-deep/60 px-3 font-body text-cream outline-none focus:border-gilt-strong placeholder:text-cream/30";
 
 export function LibraryManager({ entries }: { entries: LibraryEntry[] }) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { call, busy, error } = useApi();
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY);
 
   const filtered = entries.filter((e) => e.name.toLowerCase().includes(query.toLowerCase()));
-
-  async function call(url: string, init: RequestInit): Promise<boolean> {
-    setError(null);
-    setBusy(true);
-    const res = await fetch(url, init);
-    setBusy(false);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Something went wrong.");
-      return false;
-    }
-    router.refresh();
-    return true;
-  }
 
   function startAdd() {
     setEditId(null);
