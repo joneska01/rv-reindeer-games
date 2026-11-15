@@ -285,6 +285,71 @@ describe('applyTieBreakers', () => {
     expect(ranked.get('Y')!.rank).toBe(2);
   });
 
+  /** Level on points on purpose: the tie-breakers are what's under test. */
+  function levelLeaderboard(teams: Team[], level: string[]) {
+    return teams.map((t) => ({
+      teamId: t.id,
+      totalPoints: level.includes(t.id) ? 50 : 10,
+      partyFoulCount: 0,
+      gamesCompleted: 3,
+      gamePoints: {},
+      gameRawScores: {},
+    }));
+  }
+
+  it('three-way tie cascades: a step that separates only some teams still counts', () => {
+    const teams = ['A', 'B', 'C', 'D', 'E'].map((n) => team(n));
+    const games = [game({ id: 'g1' }), game({ id: 'g2' }), game({ id: 'g3' })];
+    // Finishing order per game, best first.
+    const order: Record<string, string[]> = {
+      g1: ['A', 'B', 'C', 'D', 'E'],
+      g2: ['D', 'B', 'C', 'A', 'E'],
+      g3: ['E', 'B', 'D', 'C', 'A'],
+    };
+    const scores = Object.entries(order).flatMap(([g, o]) =>
+      o.map((t, i) => score(g, t, 10 - i)),
+    );
+    // A: 1 win / 1 top-3.  B: 0 wins / 3 top-3.  C: 0 wins / 2 top-3.
+    const lb = levelLeaderboard(teams, ['A', 'B', 'C']);
+    const ranked = applyTieBreakers(teams, lb, games, scores, []);
+    const top = ranked.filter((r) => r.totalPoints === 50).map((r) => r.teamId);
+    // Step 1 (wins) puts A first; B and C stay level on wins and split on step 2.
+    expect(top).toEqual(['A', 'B', 'C']);
+    expect(ranked.filter((r) => r.totalPoints === 50).map((r) => r.rank)).toEqual([1, 2, 3]);
+    expect(ranked.some((r) => r.unresolvedTie)).toBe(false);
+  });
+
+  it('a partial split leaves only the still-level teams flagged as unresolved', () => {
+    const teams = ['A', 'B', 'C'].map((n) => team(n));
+    const g1 = game({ id: 'g1' });
+    // A wins outright; B and C tie for 2nd — identical on every tie-breaker.
+    const scores = [score('g1', 'A', 10), score('g1', 'B', 5), score('g1', 'C', 5)];
+    const lb = levelLeaderboard(teams, ['A', 'B', 'C']);
+    const ranked = applyTieBreakers(teams, lb, [g1], scores, []);
+    const byId = new Map(ranked.map((r) => [r.teamId, r]));
+    expect(byId.get('A')).toMatchObject({ rank: 1, isTied: false, unresolvedTie: false });
+    expect(byId.get('B')).toMatchObject({ rank: 2, isTied: true, unresolvedTie: true });
+    expect(byId.get('C')).toMatchObject({ rank: 2, isTied: true, unresolvedTie: true });
+  });
+
+  it('step 4 uses the last game COMPLETED, not the last by sort order', () => {
+    const teams = [team('X'), team('Y')];
+    // g1 is first in the running order but was completed last.
+    const g1 = game({ id: 'g1', sortOrder: 1, completedAt: new Date('2026-12-01T21:00:00Z') });
+    const g2 = game({ id: 'g2', sortOrder: 2, completedAt: new Date('2026-12-01T20:00:00Z') });
+    // g1: X 1st, Y 2nd.  g2: Y 1st, X 2nd.  Equal wins, top-3, fouls, points.
+    const scores = [
+      score('g1', 'X', 10), score('g1', 'Y', 5),
+      score('g2', 'Y', 10), score('g2', 'X', 5),
+    ];
+    const lb = computeLeaderboard([g1, g2], scores, [], teams, []);
+    const ranked = applyTieBreakers(teams, lb, [g1, g2], scores, []);
+    const byId = new Map(ranked.map((r) => [r.teamId, r]));
+    expect(byId.get('X')!.rank).toBe(1); // won the game finished last
+    expect(byId.get('Y')!.rank).toBe(2);
+    expect(ranked.some((r) => r.unresolvedTie)).toBe(false);
+  });
+
   it('step 5: fully identical teams surface an unresolved tie', () => {
     const teams = [team('X'), team('Y')];
     const g1 = game({ id: 'g1' });
