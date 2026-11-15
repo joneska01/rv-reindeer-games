@@ -181,10 +181,33 @@ export function computeGameRankings(
   return { gameId: game.id, rankings, isProvisional: anyProvisional };
 }
 
-export function computeLeaderboard(
+/** gameId → ranking, for every completed game. Each game is ranked exactly once
+ *  here and the result is shared by the leaderboard and the tie-breakers. */
+type RankingsByGame = Map<string, GameRankingResult>;
+
+function rankCompletedGames(
   games: Game[],
   scores: Score[],
   votes: CostumeVote[],
+  teams: Team[],
+): RankingsByGame {
+  const scoresByGame = new Map<string, Score[]>();
+  for (const s of scores) {
+    const list = scoresByGame.get(s.gameId);
+    if (list) list.push(s);
+    else scoresByGame.set(s.gameId, [s]);
+  }
+  const rankings: RankingsByGame = new Map();
+  for (const game of games) {
+    if (!game.isComplete) continue;
+    rankings.set(game.id, computeGameRankings(game, scoresByGame.get(game.id) ?? [], votes, teams));
+  }
+  return rankings;
+}
+
+function leaderboardFrom(
+  games: Game[],
+  rankings: RankingsByGame,
   teams: Team[],
   partyFouls: PartyFoul[],
 ): LeaderboardResult {
@@ -197,8 +220,7 @@ export function computeLeaderboard(
     let gamesCompleted = 0;
 
     for (const game of completedGames) {
-      const { rankings } = computeGameRankings(game, scores, votes, teams);
-      const entry = rankings.find((r) => r.teamId === team.id);
+      const entry = rankings.get(game.id)?.rankings.find((r) => r.teamId === team.id);
       if (entry) {
         gamePoints[game.id] = entry.placementPoints;
         gameRawScores[game.id] = entry.combinedScore;
@@ -223,6 +245,16 @@ export function computeLeaderboard(
   });
 }
 
+export function computeLeaderboard(
+  games: Game[],
+  scores: Score[],
+  votes: CostumeVote[],
+  teams: Team[],
+  partyFouls: PartyFoul[],
+): LeaderboardResult {
+  return leaderboardFrom(games, rankCompletedGames(games, scores, votes, teams), teams, partyFouls);
+}
+
 /** The game finished most recently. Falls back to list order when no
  *  completion times are recorded (the PRD says "last game marked complete"). */
 function lastCompletedGame(completed: Game[]): Game | undefined {
@@ -245,14 +277,21 @@ export function applyTieBreakers(
   scores: Score[],
   votes: CostumeVote[],
 ): RankedTeam[] {
+  return tieBreakFrom(leaderboard, games, rankCompletedGames(games, scores, votes, teams));
+}
+
+function tieBreakFrom(
+  leaderboard: LeaderboardResult,
+  games: Game[],
+  rankings: RankingsByGame,
+): RankedTeam[] {
   const completedGames = games.filter((g) => g.isComplete);
   const skillGames = completedGames.filter((g) => g.scoreSource !== 'voting');
 
   // gameId → teamId → place, for every completed game.
   const places = new Map<string, Map<string, number>>();
-  for (const game of completedGames) {
-    const { rankings } = computeGameRankings(game, scores, votes, teams);
-    places.set(game.id, new Map(rankings.map((r) => [r.teamId, r.place])));
+  for (const [gameId, result] of rankings) {
+    places.set(gameId, new Map(result.rankings.map((r) => [r.teamId, r.place])));
   }
   const placeIn = (g: Game, teamId: string) => places.get(g.id)?.get(teamId);
   const byTeam = new Map(leaderboard.map((e) => [e.teamId, e]));
@@ -306,6 +345,20 @@ export function applyTieBreakers(
   }
 
   return result;
+}
+
+/** Leaderboard + tie-broken ranks in one pass, ranking each game once. This is
+ *  what the Live console, Closing page and TV scoreboard call. */
+export function computeStandings(
+  games: Game[],
+  scores: Score[],
+  votes: CostumeVote[],
+  teams: Team[],
+  partyFouls: PartyFoul[],
+): { leaderboard: LeaderboardResult; ranked: RankedTeam[] } {
+  const rankings = rankCompletedGames(games, scores, votes, teams);
+  const leaderboard = leaderboardFrom(games, rankings, teams, partyFouls);
+  return { leaderboard, ranked: tieBreakFrom(leaderboard, games, rankings) };
 }
 
 /** Split tied teams into best-first sub-groups, recursing into each

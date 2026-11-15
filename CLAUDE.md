@@ -28,6 +28,7 @@ Copy `.env.local.example` to `.env.local` and fill in:
 
 ## Key Architecture Decisions
 
+- **Admin API routes** are wrapped in `adminRoute()` (`lib/admin-route.ts`) and use the `editable…()` guards in `lib/guards.ts` for the lock check; request schemas live in `lib/schemas.ts`. Guards throw `ApiError`; the wrapper turns it (or any failure) into JSON.
 - **Single scoring engine** at `/lib/scoring.ts` — pure functions, zero DB calls. All API routes and components import from here. Never duplicate scoring logic.
 - **`active_game_id` on the Year row** is the single source of truth for which game is active. Setting a new active game must atomically clear the previous one.
 - **Only completed games** (`is_complete = true`) contribute to the overall leaderboard. The active game's scores appear only in the right panel.
@@ -37,6 +38,7 @@ Copy `.env.local.example` to `.env.local` and fill in:
 ## Scoring Engine Contract (`/lib/scoring.ts`)
 
 ```typescript
+computeStandings(games, scores, votes, teams, partyFouls): { leaderboard, ranked }  // ranks each game once; what the UI calls
 computeLeaderboard(games, scores, votes, teams, partyFouls): LeaderboardResult
 computeGameRankings(game, scores, votes, teams): GameRankingResult
 applyTieBreakers(teams, leaderboard, games, scores, votes): RankedTeam[]

@@ -1,36 +1,41 @@
-import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { requireAdmin } from '@/lib/auth';
-import { ok, fail, parseBody } from '@/lib/api';
+import { sql, and, eq, inArray } from 'drizzle-orm';
+import { adminRoute } from '@/lib/admin-route';
+import { ok, parseBody, ApiError } from '@/lib/api';
 import { db } from '@/lib/db';
 import { games } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { getYear } from '@/lib/years';
+import { editableYear } from '@/lib/guards';
+import { uuid } from '@/lib/schemas';
 
 const reorderSchema = z.object({
-  yearId: z.string().uuid(),
-  orderedIds: z.array(z.string().uuid()).min(1),
+  yearId: uuid,
+  orderedIds: z.array(uuid).min(1),
 });
 
-export async function POST(req: NextRequest) {
-  return requireAdmin(req, async () => {
-    const parsed = await parseBody(req, reorderSchema);
-    if (parsed.response) return parsed.response;
-    const { yearId, orderedIds } = parsed.data;
+export const POST = adminRoute(async (req) => {
+  const parsed = await parseBody(req, reorderSchema);
+  if (parsed.response) return parsed.response;
+  const { yearId, orderedIds } = parsed.data;
 
-    const year = await getYear(yearId);
-    if (!year) return fail('Year not found.', 404);
-    if (year.isLocked) return fail('This edition is locked.', 423);
+  await editableYear(yearId);
 
-    await db.transaction(async (tx) => {
-      for (let i = 0; i < orderedIds.length; i++) {
-        await tx
-          .update(games)
-          .set({ sortOrder: i + 1 })
-          .where(eq(games.id, orderedIds[i]));
-      }
-    });
-
-    return ok({ reordered: orderedIds.length });
+  // One statement: sort_order = CASE id WHEN … THEN position END, limited to this
+  // edition's games. If any id isn't one of them the transaction rolls back.
+  const position = sql.join(
+    orderedIds.map((id, i) => sql`when ${id}::uuid then ${i + 1}::int`),
+    sql` `,
+  );
+  const updated = await db.transaction(async (tx) => {
+    const rows = await tx
+      .update(games)
+      .set({ sortOrder: sql`case ${games.id} ${position} end` })
+      .where(and(eq(games.yearId, yearId), inArray(games.id, orderedIds)))
+      .returning({ id: games.id });
+    if (rows.length !== orderedIds.length) {
+      throw new ApiError(422, 'Those games are not all part of this edition.');
+    }
+    return rows.length;
   });
-}
+
+  return ok({ reordered: updated });
+});
