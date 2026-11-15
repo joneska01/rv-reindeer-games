@@ -18,6 +18,6 @@ export function resolveDatabaseUrl(): string {
 
   throw new Error(
     'DATABASE_URL is not set (and no *_DATABASE_URL / *_POSTGRES_URL fallback found). ' +
-      'Run `vercel env pull .env.local` after connecting Neon.',
+      'Run `vercel env pull .env.local` after connecting Prisma Postgres.',
   );
 }
