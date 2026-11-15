@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useApi } from "@/lib/hooks/useApi";
 import { Panel } from "@/components/shared/Panel";
 import { Button } from "@/components/shared/Button";
 import { SectionHeading } from "@/components/shared/SectionHeading";
@@ -31,9 +31,7 @@ export function TeamManager({
   teams: TeamRow[];
   locked: boolean;
 }) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { call, busy, error } = useApi();
 
   const [name, setName] = useState("");
   const [color, setColor] = useState(SWATCHES[0]);
@@ -42,20 +40,6 @@ export function TeamManager({
   const [editColor, setEditColor] = useState("");
 
   const atCap = teams.length >= MAX_TEAMS;
-
-  async function call(url: string, init: RequestInit): Promise<boolean> {
-    setError(null);
-    setBusy(true);
-    const res = await fetch(url, init);
-    setBusy(false);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Something went wrong.");
-      return false;
-    }
-    router.refresh();
-    return true;
-  }
 
   async function addTeam(e: React.FormEvent) {
     e.preventDefault();

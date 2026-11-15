@@ -5,7 +5,7 @@ import { Panel } from "@/components/shared/Panel";
 import { Badge } from "@/components/shared/Badge";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/cn";
-import { useApi, jsonInit } from "./useApi";
+import { useApi, jsonInit } from "@/lib/hooks/useApi";
 import type { LiveGameVM, LiveTeamVM, LiveScoreVM } from "./types";
 
 const inputClass =

@@ -6,7 +6,7 @@ import { Badge } from "@/components/shared/Badge";
 import { Medal } from "@/components/shared/Medal";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/cn";
-import { useApi, jsonInit } from "@/components/admin/live/useApi";
+import { useApi, jsonInit } from "@/lib/hooks/useApi";
 
 type DisplayMode = "scoreboard" | "podium" | "final_results";
 type PodiumState = "hidden" | "show_third" | "show_second" | "show_first" | "show_all";

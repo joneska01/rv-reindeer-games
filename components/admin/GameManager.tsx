@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useApi } from "@/lib/hooks/useApi";
 import {
   DndContext,
   closestCenter,
@@ -34,6 +34,7 @@ import {
 export interface GameRow {
   id: string;
   name: string;
+  scoringDescription: string;
   scoreType: "high_wins" | "low_wins";
   scoreSource: "manual" | "voting";
   scoreUnit: string;
@@ -85,7 +86,6 @@ export function GameManager({
   library: LibraryRow[];
   locked: boolean;
 }) {
-  const router = useRouter();
 
   // Keep a local order for snappy drag; re-sync when the server list changes.
   const ids = games.map((g) => g.id).join(",");
@@ -96,8 +96,7 @@ export function GameManager({
     setPrevIds(ids);
   }
 
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { call, busy, error } = useApi();
   const [form, setForm] = useState<FormState>(EMPTY);
   const [editId, setEditId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -106,20 +105,6 @@ export function GameManager({
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-
-  async function call(url: string, init: RequestInit): Promise<boolean> {
-    setError(null);
-    setBusy(true);
-    const res = await fetch(url, init);
-    setBusy(false);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Something went wrong.");
-      return false;
-    }
-    router.refresh();
-    return true;
-  }
 
   function startAdd() {
     setEditId(null);
@@ -131,7 +116,7 @@ export function GameManager({
     setEditId(g.id);
     setForm({
       name: g.name,
-      scoringDescription: "",
+      scoringDescription: g.scoringDescription,
       scoreType: g.scoreType,
       scoreSource: g.scoreSource,
       scoreUnit: g.scoreUnit,
