@@ -236,6 +236,11 @@ return via `ok`/`fail`.
   `globals.css` sometimes isn't hot-reloaded — the browser keeps the old animation.
   Renaming the keyframe forces a fresh one, and **restarting `npm run dev`** always
   clears it. Production builds are always correct.
+- **`SESSION_SECRET` is mandatory in production** (32+ chars). `lib/auth.ts` throws
+  on admin routes if it's missing or short — the dev fallback is public in the repo.
+  The public TV/vote pages keep working; only admin login fails.
+- **Older requirements docs live in `docs/archive/`.** The current spec is
+  `RV-Reindeer-Games-PRD-v3.md` plus the v3.1 deltas design doc.
 - **Never print the admin password** in logs/terminal. To test admin pages, mint an
   iron-session cookie from `SESSION_SECRET` instead of typing the password.
 - **Museum years are frozen.** `seed-data/*.json` are display-only and intentionally
