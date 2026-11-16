@@ -14,7 +14,7 @@ const TONES: Record<BadgeTone, string> = {
   cranberry: "border-cranberry/50 bg-cranberry/15 text-cream",
   sage: "border-sage/40 bg-sage/10 text-sage",
   amber: "border-amber/60 bg-amber/15 text-amber",
-  naughty: "border-cranberry/60 bg-cranberry/20 text-cranberry-bright",
+  naughty: "border-cherry/60 bg-cherry/15 text-cherry",
   neutral: "border-gilt bg-forest-deep/40 text-cream/80",
 };
 

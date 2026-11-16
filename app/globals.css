@@ -1,28 +1,47 @@
 @import "tailwindcss";
 
 /* ──────────────────────────────────────────────────────────────────────────
-   RV Reindeer Games — "Black-tie holiday gala"
-   Deep forest velvet, gilded brass, champagne gold, candlelight.
-   Cheeky-but-classy: elegance in the chrome, the wink lives in the copy.
+   RV Reindeer Games — "After hours"
+   A black-tie holiday gala once the lights go down: deep pine velvet, polished
+   gold, and two neon bar-sign accents. Elegant chrome, a wink in the copy.
+
+   Every color lives here as a token. Components use the Tailwind utilities
+   (text-gold, bg-panel/60…) or `var(--color-…)`; never a raw hex.
    ────────────────────────────────────────────────────────────────────────── */
 
-@theme {
+/* `static` emits every variable even if no utility mentions it, so inline styles
+   like `var(--color-mint)` in the decor components always resolve. */
+@theme static {
   /* Fonts (CSS vars injected by next/font in layout.tsx) */
   --font-display: var(--font-cinzel), Georgia, serif;
   --font-body: var(--font-lora), Georgia, serif;
   --font-mono: var(--font-dm-mono), ui-monospace, monospace;
 
-  /* Core palette */
-  --color-forest: #0b2818;
-  --color-forest-deep: #071a0f;
-  --color-panel: #13351f;
-  --color-panel-soft: #1a4327;
+  /* Velvet: page and surfaces, darkest to lightest */
+  --color-forest-deep: #06120c;
+  --color-forest: #0a1c12;
+  --color-panel: #0e2217;
+  --color-panel-soft: #153021;
+
+  /* Gold: points, winners, hairlines */
+  --color-gold: #e2bd4f;
+  --color-gold-soft: #f0d58a;
+  --color-gold-hi: #fbeeb8; /* top of the gilded-text gradient */
+  --color-gold-lo: #b8902a; /* bottom of the gilded-text gradient */
+
+  /* Text */
+  --color-cream: #f7efd9;
+  --color-sage: #9db8a4;
+
+  /* Neon. Cherry = "live" signals and demerits. Mint = success and moving up. */
+  --color-cherry: #ff3d6e;
+  --color-mint: #6ff0c8;
+
+  /* Cranberry stays for buttons and the badges that already use it */
   --color-cranberry: #b01e2e;
   --color-cranberry-bright: #d4283c;
-  --color-gold: #d4af37;
-  --color-gold-soft: #e8c97a;
-  --color-cream: #f5edd6;
-  --color-sage: #a8c5a0;
+
+  /* Podium metals and warnings */
   --color-silver: #c0c0c0;
   --color-bronze: #cd7f32;
   --color-amber: #f59e0b;
@@ -30,6 +49,11 @@
   /* Hairline borders */
   --color-gilt: color-mix(in srgb, var(--color-gold) 32%, transparent);
   --color-gilt-strong: color-mix(in srgb, var(--color-gold) 55%, transparent);
+
+  /* Glows (box-shadows) → `shadow-glow-gold` etc. */
+  --shadow-glow-gold: 0 8px 24px -10px color-mix(in srgb, var(--color-gold) 60%, transparent);
+  --shadow-glow-cranberry: 0 8px 24px -12px color-mix(in srgb, var(--color-cranberry) 70%, transparent);
+  --shadow-glow-crest: 0 0 40px -8px color-mix(in srgb, var(--color-gold) 45%, transparent);
 
   /* Radii */
   --radius-panel: 14px;
@@ -57,11 +81,13 @@
     color: var(--color-cream);
     font-family: var(--font-body);
     background-color: var(--color-forest-deep);
-    /* Candlelight glow from above + forest velvet depth */
+    /* Candlelight from above, velvet depth, and a faint cherry bar-sign haze low
+       in the corner. The haze stays under 10% so it reads as ambience, not a tint. */
     background-image:
-      radial-gradient(120% 80% at 50% -10%, rgba(212, 175, 55, 0.16) 0%, transparent 55%),
-      radial-gradient(100% 70% at 50% 0%, #13351f 0%, transparent 60%),
-      linear-gradient(180deg, #0b2818 0%, #071a0f 100%);
+      radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--color-gold) 15%, transparent) 0%, transparent 55%),
+      radial-gradient(70% 50% at 100% 105%, color-mix(in srgb, var(--color-cherry) 9%, transparent) 0%, transparent 70%),
+      radial-gradient(100% 70% at 50% 0%, var(--color-panel) 0%, transparent 60%),
+      linear-gradient(180deg, var(--color-forest) 0%, var(--color-forest-deep) 100%);
     background-attachment: fixed;
   }
 
@@ -93,19 +119,47 @@
 @layer utilities {
   /* Gilded text — champagne gradient, for headings & winners */
   .text-gilt {
-    background-image: linear-gradient(180deg, #f6e7b4 0%, #d4af37 48%, #a9821f 100%);
+    background-image: linear-gradient(
+      180deg,
+      var(--color-gold-hi) 0%,
+      var(--color-gold) 48%,
+      var(--color-gold-lo) 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: var(--color-gold);
     -webkit-text-fill-color: transparent;
   }
 
+  /* A soft gold halo behind big headlines, like light spilling off a sign.
+     For a handful of hero titles only: filters are costly on a TV. */
+  .sign-glow {
+    filter: drop-shadow(0 0 14px color-mix(in srgb, var(--color-gold) 35%, transparent));
+  }
+
   /* Hairline gilt frame */
   .frame-gilt {
     border: 1px solid var(--color-gilt);
     box-shadow:
-      inset 0 1px 0 rgba(232, 201, 122, 0.12),
+      inset 0 1px 0 color-mix(in srgb, var(--color-gold-soft) 12%, transparent),
       0 18px 40px -24px rgba(0, 0, 0, 0.85);
+  }
+
+  /* A neon tube around a panel. Drawn on ::after so it stacks on top of
+     `.frame-gilt` instead of fighting it for border and box-shadow. */
+  .frame-neon {
+    position: relative;
+  }
+  .frame-neon::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    border: 1.5px solid color-mix(in srgb, var(--color-cherry) 80%, transparent);
+    box-shadow:
+      0 0 22px -2px color-mix(in srgb, var(--color-cherry) 55%, transparent),
+      inset 0 0 22px -6px color-mix(in srgb, var(--color-cherry) 40%, transparent);
   }
 
   /* Engraved small-caps label */
@@ -115,6 +169,23 @@
     letter-spacing: 0.32em;
     font-size: 0.72rem;
     color: var(--color-gold-soft);
+  }
+
+  /* Neon sign text. Defined after `.eyebrow` on purpose: `eyebrow neon-cherry`
+     is an eyebrow that glows (this color wins). */
+  .neon-cherry {
+    color: var(--color-cherry);
+    text-shadow:
+      0 0 6px color-mix(in srgb, var(--color-cherry) 80%, transparent),
+      0 0 18px color-mix(in srgb, var(--color-cherry) 55%, transparent),
+      0 0 36px color-mix(in srgb, var(--color-cherry) 30%, transparent);
+  }
+
+  .neon-mint {
+    color: var(--color-mint);
+    text-shadow:
+      0 0 6px color-mix(in srgb, var(--color-mint) 70%, transparent),
+      0 0 18px color-mix(in srgb, var(--color-mint) 45%, transparent);
   }
 
   .safe-bottom {
@@ -133,11 +204,6 @@
   @keyframes rv-twinkle {
     0%, 100% { opacity: 0.45; filter: brightness(0.8); }
     50% { opacity: 1; filter: brightness(1.4); }
-  }
-
-  @keyframes rv-shimmer {
-    0% { background-position: -120% 0; }
-    100% { background-position: 220% 0; }
   }
 
   @keyframes rv-rise {
@@ -166,8 +232,8 @@
   }
 
   @keyframes rv-glow {
-    0%, 100% { box-shadow: 0 0 36px -10px rgba(212, 175, 55, 0.5); }
-    50% { box-shadow: 0 0 56px -6px rgba(212, 175, 55, 0.85); }
+    0%, 100% { box-shadow: 0 0 36px -10px color-mix(in srgb, var(--color-gold) 50%, transparent); }
+    50% { box-shadow: 0 0 56px -6px color-mix(in srgb, var(--color-gold) 85%, transparent); }
   }
 
   .animate-glow {
@@ -201,5 +267,39 @@
 
   .animate-sleigh {
     animation: rv-sleigh 14s linear infinite;
+  }
+
+  /* A neon tube that mostly burns steady and stutters once every few seconds,
+     the way an old bar sign does. Subtle on purpose. */
+  @keyframes rv-neon-buzz {
+    0%, 90%, 100% { opacity: 1; }
+    91% { opacity: 0.55; }
+    92% { opacity: 1; }
+    94% { opacity: 0.7; }
+    95% { opacity: 1; }
+  }
+
+  .animate-neon {
+    animation: rv-neon-buzz 7s linear infinite;
+  }
+
+  /* The voting panel's neon frame breathes slowly. */
+  @keyframes rv-neon-breathe {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  .frame-neon::after {
+    animation: rv-neon-breathe 3.2s ease-in-out infinite;
+  }
+
+  /* Champagne bubbles: rise from the bottom of their container, wobbling
+     sideways, and fade out near the top. Distances are in vh so the same
+     keyframes work for any panel height (the container clips the overshoot). */
+  @keyframes rv-bubble {
+    0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+    10% { opacity: var(--bubble-opacity, 0.7); }
+    50% { transform: translate(var(--bubble-sway, 10px), -45vh) scale(1); }
+    100% { transform: translate(calc(var(--bubble-sway, 10px) * -1), -92vh) scale(1.1); opacity: 0; }
   }
 }

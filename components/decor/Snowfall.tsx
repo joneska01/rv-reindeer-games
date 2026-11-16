@@ -1,14 +1,5 @@
 import { cn } from "@/lib/cn";
-
-/**
- * Deterministic pseudo-random in [0,1). Rounded to 6 decimals so the tiny
- * last-digit differences between Node's and the browser's `Math.sin` can't
- * cause a hydration mismatch — every downstream +,−,× is then bit-identical.
- */
-function seeded(i: number, salt: number): number {
-  const x = Math.sin((i + 1) * 12.9898 + salt * 78.233) * 43758.5453;
-  return Math.round((x - Math.floor(x)) * 1e6) / 1e6;
-}
+import { seeded } from "./seeded";
 
 /**
  * Subtle CSS snowfall. Flakes are seeded by index (no randomness at runtime, so
@@ -40,7 +31,7 @@ export function Snowfall({ count = 40, className }: { count?: number; className?
             left: `${f.left}%`,
             width: `${f.size}px`,
             height: `${f.size}px`,
-            boxShadow: "0 0 4px rgba(245,237,214,0.6)",
+            boxShadow: "0 0 4px color-mix(in srgb, var(--color-cream) 60%, transparent)",
             animation: `rv-fall ${f.duration}s linear ${f.delay}s infinite`,
             ["--flake-opacity" as string]: f.opacity,
             ["--flake-drift" as string]: `${f.drift}vw`,
