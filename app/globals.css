@@ -162,6 +162,26 @@
       inset 0 0 22px -6px color-mix(in srgb, var(--color-cherry) 40%, transparent);
   }
 
+  /* A glint that sweeps across a row now and then (the leader's). The sweep itself
+     is animated in the motion block below; without motion it sits off-screen. */
+  .sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform: translateX(-120%);
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      color-mix(in srgb, var(--color-gold-hi) 22%, transparent) 50%,
+      transparent 70%
+    );
+  }
+
   /* Engraved small-caps label */
   .eyebrow {
     font-family: var(--font-display);
@@ -281,6 +301,16 @@
 
   .animate-neon {
     animation: rv-neon-buzz 7s linear infinite;
+  }
+
+  /* One quick pass, then a long rest: the glint is an accent, not a flicker. */
+  @keyframes rv-sheen {
+    0% { transform: translateX(-120%); }
+    18%, 100% { transform: translateX(120%); }
+  }
+
+  .sheen::after {
+    animation: rv-sheen 7s ease-in-out infinite;
   }
 
   /* The voting panel's neon frame breathes slowly. */

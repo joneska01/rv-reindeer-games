@@ -171,6 +171,7 @@ The host drives all of this from the **Awards** tab (`components/admin/ClosingCo
 | `scoring.ts` | **The engine.** `computeLeaderboard`, `computeGameRankings`, `applyTieBreakers`, and `computeStandings` (both in one pass). | Pure. Unit-tested. Change scoring rules here only. Each completed game is ranked once and shared. |
 | `scoring-kinds.ts` | Maps the admin's "Count / Timing / Voting" dropdown ↔ stored `score_type`/`score_source`/`score_unit`. | Shared by both game forms. |
 | `scoreboard.ts` | `buildScoreboard()` — shapes the public TV JSON payload. | Used by the page (SSR) and `/api/scoreboard`. |
+| `standings-diff.ts` | `diffStandings(prev, next)` — who moved, scored, or took a demerit between two looks at the standings. | Pure. Unit-tested. Drives the ▲▼ markers; the "big moments" will reuse it. Returns nothing on first load, and a team's very first ranking isn't a move. |
 | `active-game.ts` | `toSbActiveGame()` — shapes the live game for the TV and **withholds the costume tally while voting is open**. | Pure. Unit-tested. The one place that decides what the TV may see of an open vote. |
 | `vote-url.ts` | `buildVoteUrl(host, proto)` — the address the TV's QR code points at, from the request headers. | Pure. Unit-tested. Rejects anything that isn't a plain `host[:port]`. |
 | `live.ts` | `getLiveData()` (one parallel DB pass — five queries, one round trip) + `rankStandings()` (calls `computeStandings`). | Shared by Live, Awards and the TV scoreboard. |
@@ -188,6 +189,7 @@ The host drives all of this from the **Awards** tab (`components/admin/ClosingCo
 | `view-models.ts` | `TeamVM`, `GameVM`, `LibraryGameVM`, `StandingVM` + their `toXxxVM()` mappers. | The one definition of what the server hands client components. Pure, unit-tested. Never ship host-only fields (e.g. game `instructions`). |
 | `hooks/useApi.ts` | Admin mutations: busy/error state, refreshes server data. | `jsonInit(method, body)` builds the request. |
 | `hooks/usePolling.ts` | `usePolling(url, ms, initial)` for the TV scoreboard and vote booth. | Keeps last good data, never stacks requests, pauses while the tab is hidden and refreshes on return. |
+| `hooks/useStandingChanges.ts` | `useStandingChanges(standings)` — remembers who just moved for ~20s so the board can show ▲▼. | Compares by value (polling hands back a fresh array every time). Only changes seen *after* mount count, so a refreshed TV shows no phantom moves. |
 | `hooks/useAutoRefresh.ts` | `router.refresh()` on an interval for admin panels. | Also pauses while hidden. |
 
 ## 8. Data model (the tables)
@@ -230,6 +232,17 @@ Count / Timing / Voting (mapped in `lib/scoring-kinds.ts`).
 **Add or change an animation:** keyframes go in the `@media (prefers-reduced-motion:
 no-preference)` block of `app/globals.css` (so they're accessibility-safe), then use
 the `.animate-*` class. ⚠️ See the Turbopack note in §11.
+
+**Scoreboard motion (the `motion` library):** ambient effects stay plain CSS; anything
+that reacts to *data changing* uses `motion/react` in the scoreboard components only.
+Rows glide with `<motion.li layout="position">` (keyed by team id, so a re-sort slides
+instead of snapping); totals count up with `AnimatedNumber`; the rotating intermission
+lines fade with `FadingLine`; the leader's row has a CSS `.sheen`. `ScoreboardView` wraps
+everything in `<MotionConfig reducedMotion="user">`, so anyone who asked their device for
+less motion gets plain swaps. Two rules: key a list by something that changes when its
+*meaning* changes (the live-game list is keyed by game id so scores don't count across
+from the previous game), and never let motion delay real data (the number is always the
+true value; the tween is cosmetic).
 
 **Change colors / fonts:** the `@theme static` block at the top of `app/globals.css`
 (e.g. `--color-gold`) and `app/layout.tsx` (font imports). The palette is "After hours":
@@ -280,6 +293,11 @@ pick it up automatically. UI labels live in `lib/scoring-kinds.ts`.
   pseudo-random (`components/decor/seeded.ts`, `Math.sin` rounded to 6 decimals) so
   server and browser render identical inline styles. Don't introduce
   `Math.random()`/`Date.now()` during render.
+- **Don't run DB scripts while `npm run dev` is up.** The app holds a pool of up to 10
+  connections and the shared database's role has a small limit, so a script launched
+  alongside the dev server can fail with `too many connections for role`. Stop the dev
+  server first, or drive the change through the app's own admin API instead. (Production
+  uses the same database, so leaked connections matter there too.)
 - **The TV is built for an older screen.** `ScoreboardView`'s margins are a share of the
   screen (4% sides, 3.5% bottom) because TVs often crop the picture edge, and the QR is
   sized from screen height so nothing scrolls. Keep new TV elements inside that frame.

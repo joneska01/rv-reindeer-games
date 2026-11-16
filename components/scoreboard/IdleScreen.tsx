@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { IDLE_LINES, pickLine } from "@/lib/copy";
+import { FadingLine } from "./FadingLine";
 
 export function IdleScreen({ seed }: { seed: number }) {
   return (
@@ -17,7 +18,11 @@ export function IdleScreen({ seed }: { seed: number }) {
       </div>
       <p className="eyebrow mb-3">Reindeer Games</p>
       <h1 className="text-gilt mb-5 text-4xl sm:text-6xl">The Stage Is Set</h1>
-      <p className="max-w-md font-body text-lg text-sage">{pickLine(IDLE_LINES, seed)}</p>
+      <FadingLine
+        text={pickLine(IDLE_LINES, seed)}
+        reserve="min-h-[4rem]"
+        className="max-w-md font-body text-lg text-sage"
+      />
     </div>
   );
 }
