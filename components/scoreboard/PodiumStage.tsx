@@ -44,7 +44,7 @@ export function PodiumStage({
   return (
     <div className="flex h-full flex-col items-center justify-end">
       <p className="eyebrow mb-2 text-base">The Podium</p>
-      <h2 className="text-gilt mb-12 text-center text-5xl">Reindeer Games Champions</h2>
+      <h2 className="text-gilt sign-glow mb-12 text-center text-5xl">Reindeer Games Champions</h2>
 
       <div className="flex w-full max-w-4xl items-end justify-center gap-6">
         {SEATS.map(({ place, height, glyph, accent, fill }) => {
@@ -116,7 +116,7 @@ function TallyingScreen() {
       </div>
 
       <p className="eyebrow mb-3 text-base">The Envelope, Please</p>
-      <h2 className="text-gilt mb-4 animate-pulse text-5xl sm:text-6xl">Tallying the Results…</h2>
+      <h2 className="text-gilt sign-glow mb-4 animate-pulse text-5xl sm:text-6xl">Tallying the Results…</h2>
       <p className="max-w-md font-body text-xl text-sage">
         The judges are deliberating (and topping off their cocoa).
       </p>

@@ -112,7 +112,8 @@ components/
   scoreboard/  The TV screens (Welcome, Split, Podium, Final, Idle, Intermission) plus the
                costume-vote pieces: VotePrompt (QR + "Scan to vote"), VoteQr, BallotTracker
   vote/        VoteBooth
-  decor/       Snowfall, StringLights, Confetti, IntermissionScene (eye candy)
+  decor/       Snowfall, StringLights, Confetti, Bubbles, IntermissionScene (eye candy);
+               seeded.ts is the shared pseudo-random they all use
 
 lib/           Server + shared logic (see §7)
 db/            Drizzle schema + generated migrations
@@ -230,8 +231,22 @@ Count / Timing / Voting (mapped in `lib/scoring-kinds.ts`).
 no-preference)` block of `app/globals.css` (so they're accessibility-safe), then use
 the `.animate-*` class. ⚠️ See the Turbopack note in §11.
 
-**Change colors / fonts:** the `@theme` block at the top of `app/globals.css`
-(e.g. `--color-gold`) and `app/layout.tsx` (font imports).
+**Change colors / fonts:** the `@theme static` block at the top of `app/globals.css`
+(e.g. `--color-gold`) and `app/layout.tsx` (font imports). The palette is "After hours":
+pine velvet (`forest-deep`, `forest`, `panel`, `panel-soft`), gold, cream/sage text, and
+two neon accents with a job each: **`cherry` = live signals and demerits**, **`mint` =
+success and moving up**. Cranberry is only for buttons and the badges that already use
+it. Components use the utilities (`text-gold`, `bg-panel/60`) or `var(--color-…)`; **never
+a raw hex**. The exceptions are team colors (the host's data), the `#888` fallback for a
+missing team color, and the QR code (fixed for scan contrast). Glows are theme shadows
+(`shadow-glow-gold`), so there are no `rgba()` box-shadows in components.
+`@theme static` emits every variable even when no utility uses it, so inline
+`var(--color-mint)` in the decor components always resolves.
+
+**Add a neon sign or glow:** `neon-cherry` / `neon-mint` make text glow (put them with
+`eyebrow`); `animate-neon` adds the occasional buzz. `frame-neon` wraps a panel in a
+neon tube drawn on `::after`, so it doesn't fight `frame-gilt`. `sign-glow` is a soft
+gold halo for hero titles only (filters are costly on a TV, so don't spread it).
 
 **Add an admin write endpoint:** copy an existing route under `app/api/admin/`.
 Export the handler as `adminRoute(async (req) => { … })`, validate with `parseBody`
@@ -261,9 +276,13 @@ pick it up automatically. UI labels live in `lib/scoring-kinds.ts`.
 
 ## 11. Conventions & gotchas (read before you're surprised)
 
-- **Decor must be hydration-safe.** `Snowfall`/`Confetti` use a seeded pseudo-random
-  (`Math.sin`) rounded to 6 decimals so server and browser render identical inline
-  styles. Don't introduce `Math.random()`/`Date.now()` during render.
+- **Decor must be hydration-safe.** `Snowfall`/`Confetti`/`Bubbles` share one seeded
+  pseudo-random (`components/decor/seeded.ts`, `Math.sin` rounded to 6 decimals) so
+  server and browser render identical inline styles. Don't introduce
+  `Math.random()`/`Date.now()` during render.
+- **The TV is built for an older screen.** `ScoreboardView`'s margins are a share of the
+  screen (4% sides, 3.5% bottom) because TVs often crop the picture edge, and the QR is
+  sized from screen height so nothing scrolls. Keep new TV elements inside that frame.
 - **Flex truncation needs `min-w-0`.** A `flex-1 truncate` text node will blow out
   the layout on narrow screens unless it also has `min-w-0`. (We hit this; it's why
   you'll see `min-w-0` on every team-name row.)
