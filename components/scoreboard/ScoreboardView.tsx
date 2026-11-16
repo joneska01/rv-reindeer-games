@@ -17,9 +17,12 @@ import type { ScoreboardPayload } from "@/lib/scoreboard";
 export function ScoreboardView({
   initial,
   pollMs,
+  voteUrl,
 }: {
   initial: ScoreboardPayload;
   pollMs: number;
+  /** Address the costume-vote QR points at (the host this TV loaded); null if unknown. */
+  voteUrl: string | null;
 }) {
   // Keeps the last good payload on failure so a blip never blanks the TV.
   const { data, tick } = usePolling<ScoreboardPayload>("/api/scoreboard", pollMs, initial);
@@ -68,7 +71,12 @@ export function ScoreboardView({
               <StandingsBoard teams={teams} standings={standings} title="Overall Standings" />
             </Panel>
             <Panel tone="deep" className="flex flex-col">
-              <NowPlaying teams={teams} game={data.activeGame ?? null} seed={tick} />
+              <NowPlaying
+                teams={teams}
+                game={data.activeGame ?? null}
+                seed={tick}
+                voteUrl={voteUrl}
+              />
             </Panel>
           </div>
         )}

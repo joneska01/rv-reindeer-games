@@ -28,6 +28,12 @@ export const VOTE_CONFIRM = {
   closed: "The voting booth has closed for the evening.",
 } as const;
 
+/** TV prompt shown beside the QR code while costume voting is open. */
+export const VOTE_PROMPT = {
+  headline: "Scan to vote",
+  sub: "Rank your top three. Self-voting is gauche but legal.",
+} as const;
+
 /** Party-foul framing — the "Naughty List". */
 export const NAUGHTY = {
   label: "Naughty List",

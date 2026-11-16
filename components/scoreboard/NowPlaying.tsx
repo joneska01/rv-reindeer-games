@@ -8,6 +8,8 @@ import { IntermissionScene } from "@/components/decor/IntermissionScene";
 import type { TeamVM } from "@/lib/view-models";
 import type { SbActiveGame } from "@/lib/scoreboard";
 import { TeamDot } from "@/components/shared/TeamDot";
+import { BallotTracker } from "./BallotTracker";
+import { VotePrompt } from "./VotePrompt";
 
 /** Whole numbers stay whole; timed scores show up to 2 decimals (no float noise). */
 function fmtScore(n: number): string {
@@ -18,10 +20,13 @@ export function NowPlaying({
   teams,
   game,
   seed,
+  voteUrl,
 }: {
   teams: TeamVM[];
   game: SbActiveGame | null;
   seed: number;
+  /** Where the QR code points; `null` when the host couldn't be determined. */
+  voteUrl: string | null;
 }) {
   const team = (id: string) => teams.find((t) => t.id === id);
 
@@ -54,71 +59,50 @@ export function NowPlaying({
 
       <h2 className="text-gilt mb-4 text-3xl leading-tight">{game.name}</h2>
 
-      {game.rankings.length === 0 ? (
-        <p className="font-body text-sage">
-          {voting ? "Ballots are coming in…" : "Scores coming in…"}
-        </p>
+      {game.votingOpen ? (
+        // The server withholds the running tally while ballots are open — QR instead.
+        <VotePrompt url={voteUrl} teams={teams} votedTeamIds={game.votedTeamIds} />
       ) : (
-        <ol className="space-y-2">
-          {game.rankings.map((r) => {
-            const t = team(r.teamId);
-            return (
-              <li
-                key={r.teamId}
-                className={cn(
-                  "flex items-center gap-3 rounded-card border border-gilt/40 px-3 py-2",
-                  r.place === 1 ? "bg-gold/10" : "bg-forest-deep/40",
-                )}
-              >
-                <span className="flex w-8 justify-center">
-                  <Medal rank={r.place} />
-                </span>
-                <TeamDot color={t?.color ?? "#888"} />
-                <span className="min-w-0 flex-1 truncate font-body text-cream">{t?.name ?? "—"}</span>
-                <span className="nums text-lg text-gilt">
-                  {fmtScore(r.combinedScore)}
-                  <span className="ml-1 text-xs text-sage/60">
-                    {voting ? "pts" : game.scoreUnit}
-                  </span>
-                </span>
-              </li>
-            );
-          })}
-        </ol>
-      )}
-
-      {voting && teams.length > 0 && (
-        <div className="mt-5">
-          <p className="eyebrow mb-2">
-            Ballots In · {game.votedTeamIds.length}/{teams.length}
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {[...teams]
-              .sort(
-                (a, b) =>
-                  Number(game.votedTeamIds.includes(a.id)) -
-                  Number(game.votedTeamIds.includes(b.id)),
-              )
-              .map((t) => {
-                const voted = game.votedTeamIds.includes(t.id);
+        <>
+          {game.rankings.length === 0 ? (
+            <p className="font-body text-sage">
+              {voting ? "Ballots are coming in…" : "Scores coming in…"}
+            </p>
+          ) : (
+            <ol className="space-y-2">
+              {game.rankings.map((r) => {
+                const t = team(r.teamId);
                 return (
-                  <span
-                    key={t.id}
+                  <li
+                    key={r.teamId}
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 font-body text-sm",
-                      voted
-                        ? "border-gold/40 bg-gold/10 text-gold-soft"
-                        : "border-amber/50 bg-amber/10 text-amber",
+                      "flex items-center gap-3 rounded-card border border-gilt/40 px-3 py-2",
+                      r.place === 1 ? "bg-gold/10" : "bg-forest-deep/40",
                     )}
                   >
-                    <TeamDot color={t.color} size="2.5" />
-                    {t.name}
-                    <span className="text-xs">{voted ? "✓" : "·"}</span>
-                  </span>
+                    <span className="flex w-8 justify-center">
+                      <Medal rank={r.place} />
+                    </span>
+                    <TeamDot color={t?.color ?? "#888"} />
+                    <span className="min-w-0 flex-1 truncate font-body text-cream">
+                      {t?.name ?? "—"}
+                    </span>
+                    <span className="nums text-lg text-gilt">
+                      {fmtScore(r.combinedScore)}
+                      <span className="ml-1 text-xs text-sage/60">
+                        {voting ? "pts" : game.scoreUnit}
+                      </span>
+                    </span>
+                  </li>
                 );
               })}
-          </div>
-        </div>
+            </ol>
+          )}
+
+          {voting && teams.length > 0 && (
+            <BallotTracker teams={teams} votedTeamIds={game.votedTeamIds} />
+          )}
+        </>
       )}
     </div>
   );

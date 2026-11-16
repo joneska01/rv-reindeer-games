@@ -2,6 +2,7 @@ import 'server-only';
 import { getActiveYear } from '@/lib/years';
 import { getLiveData, rankStandings } from '@/lib/live';
 import { computeGameRankings } from '@/lib/scoring';
+import { toSbActiveGame } from '@/lib/active-game';
 import { toTeamVM, toStandingVM, type TeamVM, type StandingVM } from '@/lib/view-models';
 
 // ── Public payload types (safe to `import type` from client components) ──────
@@ -21,6 +22,8 @@ export interface SbActiveGame {
   scoreSource: 'manual' | 'voting';
   numRounds: number;
   isProvisional: boolean;
+  /** Costume ballots are being accepted: the TV shows the QR, and `rankings` is withheld. */
+  votingOpen: boolean;
   rankings: SbGameRank[];
   /** For voting games: team ids that have cast a ballot. */
   votedTeamIds: string[];
@@ -62,26 +65,7 @@ export async function buildScoreboard(): Promise<ScoreboardPayload> {
     : undefined;
   if (live) {
     const result = computeGameRankings(live, data.scores, data.votes, data.teams);
-    const votedTeamIds =
-      live.scoreSource === 'voting'
-        ? [...new Set(data.votes.map((v) => v.votingTeamId))]
-        : [];
-    activeGame = {
-      id: live.id,
-      name: live.name,
-      scoreUnit: live.scoreUnit,
-      scoreType: live.scoreType,
-      scoreSource: live.scoreSource,
-      numRounds: live.numRounds,
-      isProvisional: result.isProvisional,
-      rankings: result.rankings.map((r) => ({
-        teamId: r.teamId,
-        combinedScore: r.combinedScore,
-        place: r.place,
-        isProvisional: r.isProvisional,
-      })),
-      votedTeamIds,
-    };
+    activeGame = toSbActiveGame(live, result, data.votes, year.isLocked);
   }
 
   return {
