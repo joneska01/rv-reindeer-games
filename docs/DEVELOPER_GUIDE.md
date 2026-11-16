@@ -109,7 +109,8 @@ components/
                TeamDot, Input/Select/inputClass. Restyle once here, not in 9 files.
   admin/       Admin UI; admin/live/* is the live console. GameManager = GameForm +
                SortableGameList; ScoringKindSelect is shared with the library form.
-  scoreboard/  The TV screens (Welcome, Split, Podium, Final, Idle, Intermission)
+  scoreboard/  The TV screens (Welcome, Split, Podium, Final, Idle, Intermission) plus the
+               costume-vote pieces: VotePrompt (QR + "Scan to vote"), VoteQr, BallotTracker
   vote/        VoteBooth
   decor/       Snowfall, StringLights, Confetti, IntermissionScene (eye candy)
 
@@ -144,6 +145,18 @@ active & has_started & display_mode:
 - **`active_game_id`** (FK to `games`, `ON DELETE SET NULL`) is the single "now playing" game. Setting a new one replaces
   the old. When set, the split view's right panel is `NowPlaying`; when null, it's
   the `Intermission` filler.
+- **Costume voting on the TV.** While the active game is a *voting* game that is
+  open (not complete, edition not locked), `NowPlaying` swaps its ranking list for
+  `VotePrompt`: a big QR code to `/vote`, the typed address, and the "Ballots In"
+  tracker. The running tally is **withheld by the server** (`rankings: []`,
+  `votingOpen: true` in `lib/active-game.ts`), not merely hidden in the UI, so it
+  can't be read from `/api/scoreboard` mid-vote. The reveal is the host completing the
+  game: the active slot clears and the points land in the standings. The host's own
+  Live console still shows the live tally.
+- **Where the QR points.** `app/scoreboard/page.tsx` builds the URL from the request's
+  `host` header (`lib/vote-url.ts`), so the code always matches the site the TV loaded.
+  No env var. On `localhost` it says `localhost` (fine for a dev screenshot, useless
+  to a phone, so test a real scan on the deployed site).
 - **Finish & Lock** (`/api/admin/live/finish`) freezes editing and drops the TV to
   `podium` + `podium_state: hidden` (the drumroll) — deliberately NOT the final
   standings, so the host runs the reveal without spoilers.
@@ -157,6 +170,8 @@ The host drives all of this from the **Awards** tab (`components/admin/ClosingCo
 | `scoring.ts` | **The engine.** `computeLeaderboard`, `computeGameRankings`, `applyTieBreakers`, and `computeStandings` (both in one pass). | Pure. Unit-tested. Change scoring rules here only. Each completed game is ranked once and shared. |
 | `scoring-kinds.ts` | Maps the admin's "Count / Timing / Voting" dropdown ↔ stored `score_type`/`score_source`/`score_unit`. | Shared by both game forms. |
 | `scoreboard.ts` | `buildScoreboard()` — shapes the public TV JSON payload. | Used by the page (SSR) and `/api/scoreboard`. |
+| `active-game.ts` | `toSbActiveGame()` — shapes the live game for the TV and **withholds the costume tally while voting is open**. | Pure. Unit-tested. The one place that decides what the TV may see of an open vote. |
+| `vote-url.ts` | `buildVoteUrl(host, proto)` — the address the TV's QR code points at, from the request headers. | Pure. Unit-tested. Rejects anything that isn't a plain `host[:port]`. |
 | `live.ts` | `getLiveData()` (one parallel DB pass — five queries, one round trip) + `rankStandings()` (calls `computeStandings`). | Shared by Live, Awards and the TV scoreboard. |
 | `voting.ts` | `getVotingState()` + `openVotingGame()` — is voting open, and for whom. | Shared by `/vote` page and API. |
 | `years.ts`, `setup.ts` | Server-only DB queries for editions, teams, games, library. | `import 'server-only'`. |
@@ -233,6 +248,13 @@ pick it up automatically. UI labels live in `lib/scoring-kinds.ts`.
 - `npx vitest run` proves the engine against the one rule-consistent historical
   year (2023) plus a synthetic suite covering every rule, and asserts the museum
   fixtures are internally consistent. **Keep this green.**
+- `components/scoreboard/VoteQr.test.ts` renders the QR, turns it back into pixels and
+  scans it with `jsqr` (a dev-only dependency), so it proves the code decodes to the
+  vote URL, keeps its quiet zone, and stays high-contrast. The QR colors are fixed on
+  purpose (not theme tokens): don't "style" them to match the palette.
+- **Rehearsing the vote on the TV.** Local and production share one database, so any
+  rehearsal edition is live on the real site while you test. Use a test year, note its
+  flags first, and put them back (and delete any test ballots) when done.
 - `npx tsc --noEmit` and `npm run lint` should both be clean before committing.
 - `npm run build` is the final "does it really build?" check (catches things dev
   mode hides).
