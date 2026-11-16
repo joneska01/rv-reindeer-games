@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Snowfall } from "@/components/decor/Snowfall";
 import { Confetti } from "@/components/decor/Confetti";
+import { StringLights } from "@/components/decor/StringLights";
+import { cn } from "@/lib/cn";
 import { Panel } from "@/components/shared/Panel";
 import { Badge } from "@/components/shared/Badge";
 import { StandingsBoard } from "./StandingsBoard";
@@ -70,7 +72,11 @@ export function ScoreboardView({
             <Panel className="flex flex-col">
               <StandingsBoard teams={teams} standings={standings} title="Overall Standings" />
             </Panel>
-            <Panel tone="deep" className="flex flex-col">
+            {/* While ballots are open the panel gets a neon tube: the one loud thing on screen. */}
+            <Panel
+              tone="deep"
+              className={cn("flex flex-col", data.activeGame?.votingOpen && "frame-neon")}
+            >
               <NowPlaying
                 teams={teams}
                 game={data.activeGame ?? null}
@@ -87,9 +93,12 @@ export function ScoreboardView({
 
 function Stage({ children, confetti = false }: { children: React.ReactNode; confetti?: boolean }) {
   return (
-    <main className="relative flex min-h-dvh flex-col px-6 py-6 sm:px-10 sm:py-8">
+    // Margins are a share of the screen (4% sides, 3.5% bottom) because older TVs
+    // crop the picture edge; the top clears the string lights.
+    <main className="relative flex min-h-dvh flex-col px-[4vw] pb-[3.5vh] pt-14">
       <Snowfall count={28} />
       {confetti && <Confetti count={80} />}
+      <StringLights className="pointer-events-none absolute inset-x-0 top-0 opacity-90" />
       <div className="relative z-10 flex flex-1 flex-col">{children}</div>
     </main>
   );

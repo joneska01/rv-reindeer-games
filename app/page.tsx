@@ -46,7 +46,7 @@ export default function Home() {
 
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 pb-16 pt-20 text-center">
         {/* Crest */}
-        <div className="animate-rise mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-gilt-strong bg-forest-deep/60 shadow-[0_0_40px_-8px_rgba(212,175,55,0.45)]">
+        <div className="animate-rise mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-gilt-strong bg-forest-deep/60 shadow-glow-crest">
           <span className="text-gilt font-display text-2xl tracking-[0.1em]">RV</span>
         </div>
 

@@ -5,9 +5,9 @@ export type ButtonVariant = "gold" | "cranberry" | "ghost" | "naughty";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  gold: "bg-gradient-to-b from-gold-soft to-gold text-forest-deep border-transparent hover:brightness-110 shadow-[0_8px_24px_-10px_rgba(212,175,55,0.6)]",
+  gold: "bg-gradient-to-b from-gold-soft to-gold text-forest-deep border-transparent hover:brightness-110 shadow-glow-gold",
   cranberry:
-    "bg-cranberry text-cream border-transparent hover:bg-cranberry-bright shadow-[0_8px_24px_-12px_rgba(176,30,46,0.7)]",
+    "bg-cranberry text-cream border-transparent hover:bg-cranberry-bright shadow-glow-cranberry",
   ghost: "bg-transparent text-gold-soft border-gilt hover:border-gilt-strong hover:bg-panel/50",
   naughty: "bg-transparent text-cranberry-bright border-cranberry/50 hover:bg-cranberry/15",
 };

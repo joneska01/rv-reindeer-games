@@ -5,6 +5,7 @@ import { Badge } from "@/components/shared/Badge";
 import { cn } from "@/lib/cn";
 import { IDLE_LINES, pickLine } from "@/lib/copy";
 import { IntermissionScene } from "@/components/decor/IntermissionScene";
+import { Bubbles } from "@/components/decor/Bubbles";
 import type { TeamVM } from "@/lib/view-models";
 import type { SbActiveGame } from "@/lib/scoreboard";
 import { TeamDot } from "@/components/shared/TeamDot";
@@ -32,13 +33,16 @@ export function NowPlaying({
 
   if (!game) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-center">
-        <span className="mb-4 text-6xl">🥂</span>
-        <p className="eyebrow mb-3 text-base">Intermission</p>
-        <p className="max-w-md font-body text-2xl leading-relaxed text-cream/90">
-          {pickLine(IDLE_LINES, seed)}
-        </p>
-        <IntermissionScene />
+      <div className="relative flex h-full flex-col items-center justify-center overflow-hidden text-center">
+        <Bubbles />
+        <div className="relative z-10 flex w-full flex-col items-center">
+          <span className="mb-4 text-6xl">🥂</span>
+          <p className="eyebrow mb-3 text-base">Intermission</p>
+          <p className="max-w-md font-body text-2xl leading-relaxed text-cream/90">
+            {pickLine(IDLE_LINES, seed)}
+          </p>
+          <IntermissionScene />
+        </div>
       </div>
     );
   }
@@ -48,7 +52,14 @@ export function NowPlaying({
   return (
     <div className="flex h-full flex-col">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="eyebrow">{voting ? "Now Voting" : "Now Playing"}</p>
+        {/* The "on air" sign: cherry neon with a lit dot says this is live right now. */}
+        <p className="eyebrow neon-cherry animate-neon flex items-center gap-2.5">
+          <span
+            aria-hidden
+            className="size-1.5 rounded-full bg-cherry shadow-[0_0_8px_var(--color-cherry)]"
+          />
+          {voting ? "Now Voting" : "Now Playing"}
+        </p>
         <div className="flex items-center gap-1.5">
           {game.isProvisional && <Badge tone="amber">Round 1</Badge>}
           <Badge tone={game.scoreType === "low_wins" ? "sage" : "gold"}>

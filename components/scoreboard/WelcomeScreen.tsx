@@ -27,7 +27,7 @@ export function WelcomeScreen({ year }: { year?: number }) {
 
       <p className="eyebrow animate-rise mb-4">Welcome to the</p>
       <h1
-        className="text-gilt animate-rise text-7xl leading-none sm:text-8xl"
+        className="text-gilt sign-glow animate-rise text-7xl leading-none sm:text-8xl"
         style={{ animationDelay: "80ms" }}
       >
         {year} Edition

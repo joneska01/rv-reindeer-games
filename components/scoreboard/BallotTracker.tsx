@@ -28,7 +28,7 @@ export function BallotTracker({
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 font-body text-sm",
                   voted
-                    ? "border-gold/40 bg-gold/10 text-gold-soft"
+                    ? "border-mint/40 bg-mint/10 text-mint"
                     : "border-amber/50 bg-amber/10 text-amber",
                 )}
               >

@@ -1,6 +1,13 @@
 import { cn } from "@/lib/cn";
 
-const BULB_COLORS = ["#d4283c", "#e8c97a", "#1a8b3a", "#d4af37", "#b01e2e"];
+// Theme tokens: neon cherry and mint bulbs between the gold ones.
+const BULB_COLORS = [
+  "var(--color-cherry)",
+  "var(--color-gold-soft)",
+  "var(--color-mint)",
+  "var(--color-gold)",
+  "var(--color-cranberry-bright)",
+];
 
 /**
  * A swagged garland of café-style bulbs for headers. SVG with a draped wire and
@@ -42,8 +49,8 @@ export function StringLights({
             cx={p.x}
             cy={p.y + 8}
             r={5}
-            fill={p.color}
             style={{
+              fill: p.color,
               filter: `drop-shadow(0 0 6px ${p.color})`,
               animation: `rv-twinkle 2.8s ease-in-out ${p.delay}s infinite`,
             }}

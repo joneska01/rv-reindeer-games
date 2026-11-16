@@ -20,7 +20,7 @@ export function TeamDot({
 }) {
   return (
     <span
-      className={cn("shrink-0 rounded-full ring-1 ring-cream/20", SIZES[size], className)}
+      className={cn("shrink-0 rounded-full ring-1 ring-cream/40", SIZES[size], className)}
       style={{ backgroundColor: color }}
     />
   );

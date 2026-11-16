@@ -19,7 +19,7 @@ export function FinalResults({
     <div className="mx-auto w-full max-w-2xl">
       <div className="mb-8 text-center">
         <p className="eyebrow mb-2">Final Results · {year ?? ""}</p>
-        <h1 className="text-gilt text-5xl">The Final Tally</h1>
+        <h1 className="text-gilt sign-glow text-5xl">The Final Tally</h1>
         {champName && (
           <p className="mt-4 font-body text-lg text-sage">
             Crowned champions:{" "}
