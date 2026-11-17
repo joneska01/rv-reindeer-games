@@ -5,6 +5,7 @@ import { Medal } from "@/components/shared/Medal";
 import { Badge } from "@/components/shared/Badge";
 import { cn } from "@/lib/cn";
 import { IDLE_LINES, pickLine } from "@/lib/copy";
+import { fmtScore } from "@/lib/format";
 import { IntermissionScene } from "@/components/decor/IntermissionScene";
 import { Bubbles } from "@/components/decor/Bubbles";
 import type { TeamVM } from "@/lib/view-models";
@@ -14,11 +15,6 @@ import { AnimatedNumber } from "./AnimatedNumber";
 import { BallotTracker } from "./BallotTracker";
 import { FadingLine } from "./FadingLine";
 import { VotePrompt } from "./VotePrompt";
-
-/** Whole numbers stay whole; timed scores show up to 2 decimals (no float noise). */
-function fmtScore(n: number): string {
-  return Number.isInteger(n) ? String(n) : String(Number(n.toFixed(2)));
-}
 
 export function NowPlaying({
   teams,

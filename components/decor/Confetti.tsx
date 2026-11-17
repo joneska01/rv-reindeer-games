@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 import { seeded } from "./seeded";
 
 // Palette tokens, not hex: confetti follows the theme.
-const COLORS = [
+export const CONFETTI_COLORS = [
   "var(--color-gold)",
   "var(--color-cherry)",
   "var(--color-mint)",
@@ -22,7 +22,7 @@ export function Confetti({ count = 70, className }: { count?: number; className?
     duration: 4.5 + seeded(i, 3) * 4,
     delay: -seeded(i, 4) * 6,
     spin: 360 + seeded(i, 5) * 540,
-    color: COLORS[Math.floor(seeded(i, 6) * COLORS.length)],
+    color: CONFETTI_COLORS[Math.floor(seeded(i, 6) * CONFETTI_COLORS.length)],
     round: seeded(i, 7) > 0.6,
   }));
 

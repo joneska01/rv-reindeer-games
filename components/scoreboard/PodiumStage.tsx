@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
+import { motion } from "motion/react";
 import { cn } from "@/lib/cn";
+import { ConfettiBurst } from "@/components/decor/ConfettiBurst";
 import { StringLights } from "@/components/decor/StringLights";
 import type { TeamVM, StandingVM } from "@/lib/view-models";
 import { TeamDot } from "@/components/shared/TeamDot";
@@ -15,12 +18,15 @@ const REVEALED: Record<PodiumState, number[]> = {
   show_all: [3, 2, 1],
 };
 
-// Visual ordering left→right: plinth height, medal, accent, and solid fill.
+// Visual ordering left→right: plinth height (rem, so it can animate), medal, accent, fill.
 const SEATS = [
-  { place: 2, height: "h-44", glyph: "🥈", accent: "text-silver", fill: "bg-silver/25" },
-  { place: 1, height: "h-60", glyph: "🥇", accent: "text-gold", fill: "bg-gold/35" },
-  { place: 3, height: "h-36", glyph: "🥉", accent: "text-bronze", fill: "bg-bronze/25" },
+  { place: 2, height: "11rem", glyph: "🥈", accent: "text-silver", fill: "bg-silver/25" },
+  { place: 1, height: "15rem", glyph: "🥇", accent: "text-gold", fill: "bg-gold/35" },
+  { place: 3, height: "9rem", glyph: "🥉", accent: "text-bronze", fill: "bg-bronze/25" },
 ];
+
+// A plinth that hasn't been revealed yet is a low stub; revealing it makes it rise.
+const STUB = "3.5rem";
 
 export function PodiumStage({
   teams,
@@ -33,6 +39,13 @@ export function PodiumStage({
 }) {
   const team = (id: string) => teams.find((t) => t.id === id);
   const revealed = REVEALED[podiumState];
+
+  // Confetti goes off when first place is revealed *live*. A TV that loads (or is
+  // refreshed) onto an already-revealed podium just shows it, with no replayed burst.
+  const [mountedAt] = useState(podiumState);
+  const isFirstShown = podiumState === "show_first" || podiumState === "show_all";
+  const wasFirstShown = mountedAt === "show_first" || mountedAt === "show_all";
+  const burst = isFirstShown && !wasFirstShown;
   const namesAt = (place: number) =>
     standings.filter((s) => s.rank === place).map((s) => ({ s, t: team(s.teamId) }));
 
@@ -43,6 +56,7 @@ export function PodiumStage({
 
   return (
     <div className="flex h-full flex-col items-center justify-end">
+      {burst && <ConfettiBurst count={70} className="left-1/2 top-[48%]" />}
       <p className="eyebrow mb-2 text-base">The Podium</p>
       <h2 className="text-gilt sign-glow mb-12 text-center text-5xl">Reindeer Games Champions</h2>
 
@@ -86,17 +100,20 @@ export function PodiumStage({
               </div>
 
               {/* Plinth — solid color, champion keeps the pulsing glow */}
-              <div
+              <motion.div
+                // Always starts as a stub, so a reveal makes the plinth rise (with a
+                // touch of overshoot) rather than pop to full height.
+                initial={{ height: STUB, opacity: 0.3 }}
+                animate={{ height: isUp ? height : STUB, opacity: isUp ? 1 : 0.3 }}
+                transition={{ type: "spring", stiffness: 120, damping: 16 }}
                 className={cn(
-                  "flex w-full items-start justify-center rounded-t-card border border-gilt pt-3 transition-all duration-500",
-                  height,
+                  "flex w-full items-start justify-center rounded-t-card border border-gilt pt-3",
                   fill,
-                  isUp ? "opacity-100" : "opacity-30",
                   champ && "animate-glow",
                 )}
               >
                 <span className={cn("nums text-4xl font-medium", accent)}>{place}</span>
-              </div>
+              </motion.div>
             </div>
           );
         })}

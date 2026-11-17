@@ -303,6 +303,26 @@
     animation: rv-neon-buzz 7s linear infinite;
   }
 
+  /* Confetti burst: shoot out fast and decelerate to the apex, then fall with
+     gravity (each leg has its own easing, set on the keyframe it starts at). */
+  @keyframes rv-burst {
+    0% {
+      transform: translate(0, 0) rotate(0deg) scale(0.4);
+      opacity: 0;
+      animation-timing-function: cubic-bezier(0.1, 0.8, 0.3, 1);
+    }
+    8% { opacity: 1; }
+    38% {
+      transform: translate(var(--bx), var(--by)) rotate(calc(var(--spin) * 0.45)) scale(1);
+      opacity: 1;
+      animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6);
+    }
+    100% {
+      transform: translate(calc(var(--bx) * 1.15), calc(var(--by) + 80vh)) rotate(var(--spin)) scale(1);
+      opacity: 0;
+    }
+  }
+
   /* One quick pass, then a long rest: the glint is an accent, not a flicker. */
   @keyframes rv-sheen {
     0% { transform: translateX(-120%); }
