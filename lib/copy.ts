@@ -34,6 +34,37 @@ export const VOTE_PROMPT = {
   sub: "Rank your top three. Self-voting is gauche but legal.",
 } as const;
 
+/** Headings for the full-screen "big moments" on the TV. */
+export const MOMENT_COPY = {
+  upNext: "Up next",
+  winner: "Game complete",
+  /** The costume contest is the one game whose results stay secret until the end. */
+  votesIn: "The votes are in",
+  demerit: "Naughty List",
+} as const;
+
+/** One line telling the room how the game they're about to play is scored. */
+export function upNextRule(g: {
+  scoreType: "high_wins" | "low_wins";
+  scoreSource: "manual" | "voting";
+  scoreUnit: string;
+}): string {
+  if (g.scoreSource === "voting") return "Ballots are open. Scan the code and have your say.";
+  if (g.scoreType === "low_wins") {
+    return /second/i.test(g.scoreUnit) ? "Fastest time wins." : "Lowest score wins.";
+  }
+  return "Highest score wins.";
+}
+
+/** Toast lines when a demerit lands: arch, never crude. `seed` rotates them. */
+export const DEMERIT_LINES: ((team: string) => string)[] = [
+  (t) => `${t} just got caught. Tsk.`,
+  (t) => `${t} has been very naughty.`,
+  (t) => `Santa saw that, ${t}.`,
+  (t) => `${t} earns a demerit. Worth it?`,
+  (t) => `Careful, ${t}. The list is watching.`,
+];
+
 /** Party-foul framing — the "Naughty List". */
 export const NAUGHTY = {
   label: "Naughty List",
