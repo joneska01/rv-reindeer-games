@@ -16,7 +16,8 @@ a TV/projector shows a live gilded scoreboard. There's an admin panel for the
 host to run the night, a public scoreboard for the room, a costume-vote booth on
 guests' phones, and a museum of past years.
 
-The vibe is "cheeky but classy" — an elegant holiday cocktail party.
+The vibe is "after hours": an elegant holiday cocktail party that has turned into a
+happy hour. Classy look, cheeky adult copy (innuendo yes, explicit words no).
 
 ## 2. Tech stack (and why)
 
@@ -112,7 +113,7 @@ components/
   scoreboard/  The TV screens (Welcome, Split, Podium, Final, Idle, Intermission) plus the
                costume-vote pieces: VotePrompt (QR + "Scan to vote"), VoteQr, BallotTracker;
                and MomentStage, the full-screen "big moments" (Up Next, winner, demerit)
-  vote/        VoteBooth
+  vote/        VoteBooth (tap-to-rank couple cards, sticky "your picks" bar, one-shot burst on cast)
   decor/       Snowfall, StringLights, Confetti (steady fall), ConfettiBurst (one-shot),
                Bubbles, IntermissionScene (eye candy);
                seeded.ts is the shared pseudo-random they all use
@@ -204,7 +205,8 @@ The host drives all of this from the **Awards** tab (`components/admin/ClosingCo
 | `schemas.ts` | Shared Zod request-body schemas (games, library, teams, years). Enum values come from `db/schema.ts`. | PATCH schemas are built from default-free fields — see the comment in the file. |
 | `api.ts` | `ok()`, `fail()`, `parseBody()` (Zod), `ApiError`, `assertUnlocked()`, `toErrorResponse()`, `isUniqueViolation()` — pure response/error helpers. | No DB or `next/headers` imports, so Vitest can load it. |
 | `db.ts`, `db-url.ts` | Drizzle client + resilient connection-string resolution. | See §10. |
-| `copy.ts` | Centralized witty copy (idle lines, vote confirmations, the "Naughty List"). | Keep the voice consistent here. |
+| `copy.ts` | Centralized witty copy: intermission lines, Up Next quips, demerit toasts, ballot confirmations, the "Naughty List". | The voice rule is in the file header. Each list rotates, so adding or cutting a line is a one-line change; `copy.test.ts` guards against duplicates and lines that are too long. |
+| `ballot.ts` | The tap-to-rank rules: `tapTeam` (tap picks, tap again undoes), `rankOf`, `toBallotPicks`, `RANK_POINTS`. | Pure. Unit-tested. Three "slots", so undoing a pick leaves the others where they were. `RANK_POINTS` must match `aggregateVotePoints` in `scoring.ts`. |
 | `cn.ts` | `cn(...)` — merge Tailwind class strings. | Plain joiner, **not** tailwind-merge: never pass two conflicting utilities (`h-10` + `h-9`); CSS order decides and it's fragile. |
 | `view-models.ts` | `TeamVM`, `GameVM`, `LibraryGameVM`, `StandingVM` + their `toXxxVM()` mappers. | The one definition of what the server hands client components. Pure, unit-tested. Never ship host-only fields (e.g. game `instructions`). |
 | `hooks/useApi.ts` | Admin mutations: busy/error state, refreshes server data. | `jsonInit(method, body)` builds the request. |

@@ -1,6 +1,6 @@
 # RV Reindeer Games — CLAUDE.md
 
-Christmas-themed live scoring web app for an annual holiday party. Couples compete in games; a TV/projector shows a live scoreboard. Built with Next.js 16 App Router, Drizzle ORM, and Prisma Postgres (via the Vercel Marketplace). Theme is "cheeky but classy" — an elegant holiday cocktail party, geared toward adults. See `docs/superpowers/specs/2026-06-13-rv-reindeer-v3.1-deltas-design.md` for decisions that refine PRD v3.
+Christmas-themed live scoring web app for an annual holiday party. Couples compete in games; a TV/projector shows a live scoreboard. Built with Next.js 16 App Router, Drizzle ORM, and Prisma Postgres (via the Vercel Marketplace). Theme is "After hours" — an elegant holiday cocktail party that has turned into a happy hour, geared toward adults: classy look, cheeky copy (innuendo yes, explicit words no; see `lib/copy.ts`). See `docs/superpowers/specs/2026-06-13-rv-reindeer-v3.1-deltas-design.md` for decisions that refine PRD v3.
 
 ## Essential Commands
 
