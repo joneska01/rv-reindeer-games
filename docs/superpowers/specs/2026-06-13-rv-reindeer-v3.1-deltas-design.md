@@ -31,9 +31,17 @@ historical data. Everything in PRD v3 not contradicted here still applies.
 ## 3. Theme: "Cheeky but classy"
 
 Elegant holiday cocktail-party / awards-gala feel. The wink lives in **copy and
-motifs**, never anything crude (it's on a TV that may face in-laws).
+motifs**.
 
-**Palette (tokens):**
+> **Updated Nov 2026 (visual refresh).** The tone loosened from "never anything
+> crude" to **adult and cheeky: a holiday happy hour**. Innuendo and sly double
+> meanings are in; explicit words, slurs, and real mockery of someone's body or
+> marriage stay out. The joke is on the party, never one person. The look is now
+> "After hours" (darker pine, gold, neon cherry and mint); the palette table below is
+> the original June palette and is **superseded by the tokens in `app/globals.css`**.
+> See `docs/plans/2026-11-15-visual-refresh-plan.md`.
+
+**Palette (tokens), original:**
 
 | Role | Hex |
 |---|---|

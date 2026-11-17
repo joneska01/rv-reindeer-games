@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/cn";
-import { DEMERIT_LINES, MOMENT_COPY, upNextRule } from "@/lib/copy";
+import { DEMERIT_LINES, MOMENT_COPY, UP_NEXT_TAGS, pickLine, upNextRule } from "@/lib/copy";
 import { fmtScore } from "@/lib/format";
 import type { Moment } from "@/lib/moments";
 import type { QueuedMoment } from "@/lib/hooks/useMoments";
@@ -29,7 +29,7 @@ export function MomentStage({
     <AnimatePresence mode="wait">
       {current?.moment.kind === "upNext" && (
         <Takeover key={current.id}>
-          <UpNext moment={current.moment} />
+          <UpNext moment={current.moment} seed={current.id} />
         </Takeover>
       )}
       {current?.moment.kind === "winner" && (
@@ -60,7 +60,7 @@ function Takeover({ children }: { children: ReactNode }) {
   );
 }
 
-function UpNext({ moment }: { moment: Of<"upNext"> }) {
+function UpNext({ moment, seed }: { moment: Of<"upNext">; seed: number }) {
   return (
     <>
       <p className="eyebrow neon-cherry animate-neon text-2xl tracking-[0.4em]">
@@ -72,6 +72,12 @@ function UpNext({ moment }: { moment: Of<"upNext"> }) {
         style={{ animationDelay: "500ms" }}
       >
         {upNextRule(moment)}
+      </p>
+      <p
+        className="animate-rise mt-4 max-w-3xl font-body text-2xl italic text-gold-soft/80"
+        style={{ animationDelay: "800ms" }}
+      >
+        {pickLine(UP_NEXT_TAGS, seed)}
       </p>
     </>
   );
