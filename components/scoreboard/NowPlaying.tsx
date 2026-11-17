@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "motion/react";
 import { Medal } from "@/components/shared/Medal";
 import { Badge } from "@/components/shared/Badge";
 import { cn } from "@/lib/cn";
@@ -9,7 +10,9 @@ import { Bubbles } from "@/components/decor/Bubbles";
 import type { TeamVM } from "@/lib/view-models";
 import type { SbActiveGame } from "@/lib/scoreboard";
 import { TeamDot } from "@/components/shared/TeamDot";
+import { AnimatedNumber } from "./AnimatedNumber";
 import { BallotTracker } from "./BallotTracker";
+import { FadingLine } from "./FadingLine";
 import { VotePrompt } from "./VotePrompt";
 
 /** Whole numbers stay whole; timed scores show up to 2 decimals (no float noise). */
@@ -38,9 +41,11 @@ export function NowPlaying({
         <div className="relative z-10 flex w-full flex-col items-center">
           <span className="mb-4 text-6xl">🥂</span>
           <p className="eyebrow mb-3 text-base">Intermission</p>
-          <p className="max-w-md font-body text-2xl leading-relaxed text-cream/90">
-            {pickLine(IDLE_LINES, seed)}
-          </p>
+          <FadingLine
+            text={pickLine(IDLE_LINES, seed)}
+            reserve="min-h-[7.5rem]"
+            className="max-w-md font-body text-2xl leading-relaxed text-cream/90"
+          />
           <IntermissionScene />
         </div>
       </div>
@@ -80,12 +85,19 @@ export function NowPlaying({
               {voting ? "Ballots are coming in…" : "Scores coming in…"}
             </p>
           ) : (
-            <ol className="space-y-2">
+            // Keyed by game: a different game remounts the list, so rows don't slide
+            // (or scores count) across from the previous game's results.
+            <ol key={game.id} className="space-y-2">
               {game.rankings.map((r) => {
                 const t = team(r.teamId);
                 return (
-                  <li
+                  <motion.li
                     key={r.teamId}
+                    layout="position"
+                    // A team's first score fades in; later changes slide.
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 240, damping: 28 }}
                     className={cn(
                       "flex items-center gap-3 rounded-card border border-gilt/40 px-3 py-2",
                       r.place === 1 ? "bg-gold/10" : "bg-forest-deep/40",
@@ -99,12 +111,12 @@ export function NowPlaying({
                       {t?.name ?? "—"}
                     </span>
                     <span className="nums text-lg text-gilt">
-                      {fmtScore(r.combinedScore)}
+                      <AnimatedNumber value={r.combinedScore} format={fmtScore} />
                       <span className="ml-1 text-xs text-sage/60">
                         {voting ? "pts" : game.scoreUnit}
                       </span>
                     </span>
-                  </li>
+                  </motion.li>
                 );
               })}
             </ol>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { MotionConfig } from "motion/react";
 import { Snowfall } from "@/components/decor/Snowfall";
 import { Confetti } from "@/components/decor/Confetti";
 import { StringLights } from "@/components/decor/StringLights";
@@ -99,7 +100,10 @@ function Stage({ children, confetti = false }: { children: React.ReactNode; conf
       <Snowfall count={28} />
       {confetti && <Confetti count={80} />}
       <StringLights className="pointer-events-none absolute inset-x-0 top-0 opacity-90" />
-      <div className="relative z-10 flex flex-1 flex-col">{children}</div>
+      {/* "user": anyone who asked their device for less motion gets plain swaps, not slides. */}
+      <MotionConfig reducedMotion="user">
+        <div className="relative z-10 flex flex-1 flex-col">{children}</div>
+      </MotionConfig>
     </main>
   );
 }
