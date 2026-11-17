@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 
-const MEDALS: Record<number, { glyph: string; ring: string }> = {
+export const MEDALS: Record<number, { glyph: string; ring: string }> = {
   1: { glyph: "🥇", ring: "text-gold" },
   2: { glyph: "🥈", ring: "text-silver" },
   3: { glyph: "🥉", ring: "text-bronze" },

@@ -3,6 +3,7 @@ import { getActiveYear } from '@/lib/years';
 import { getLiveData, rankStandings } from '@/lib/live';
 import { computeGameRankings } from '@/lib/scoring';
 import { toSbActiveGame } from '@/lib/active-game';
+import { pickLastCompleted, toSbLastCompleted } from '@/lib/last-completed';
 import { toTeamVM, toStandingVM, type TeamVM, type StandingVM } from '@/lib/view-models';
 
 // ── Public payload types (safe to `import type` from client components) ──────
@@ -29,6 +30,18 @@ export interface SbActiveGame {
   votedTeamIds: string[];
 }
 
+/** The game that finished most recently, with its podium, for the TV's winner card. */
+export interface SbLastCompleted {
+  gameId: string;
+  name: string;
+  scoreSource: 'manual' | 'voting';
+  scoreUnit: string;
+  /** ISO time; the TV compares these to tell a new finish from a reload. */
+  completedAt: string;
+  /** Top three places (all teams tied for one), best first. */
+  podium: SbGameRank[];
+}
+
 export interface ScoreboardPayload {
   active: boolean;
   year?: number;
@@ -40,6 +53,7 @@ export interface ScoreboardPayload {
   teams?: TeamVM[];
   standings?: StandingVM[];
   activeGame?: SbActiveGame | null;
+  lastCompleted?: SbLastCompleted | null;
   totalGames?: number;
   completedGames?: number;
 }
@@ -68,6 +82,15 @@ export async function buildScoreboard(): Promise<ScoreboardPayload> {
     activeGame = toSbActiveGame(live, result, data.votes, year.isLocked);
   }
 
+  let lastCompleted: SbLastCompleted | null = null;
+  const finished = pickLastCompleted(data.games);
+  if (finished) {
+    lastCompleted = toSbLastCompleted(
+      finished,
+      computeGameRankings(finished, data.scores, data.votes, data.teams),
+    );
+  }
+
   return {
     active: true,
     year: year.year,
@@ -79,6 +102,7 @@ export async function buildScoreboard(): Promise<ScoreboardPayload> {
     teams,
     standings,
     activeGame,
+    lastCompleted,
     totalGames: data.games.length,
     completedGames: data.games.filter((g) => g.isComplete).length,
   };

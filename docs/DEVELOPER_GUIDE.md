@@ -110,9 +110,11 @@ components/
   admin/       Admin UI; admin/live/* is the live console. GameManager = GameForm +
                SortableGameList; ScoringKindSelect is shared with the library form.
   scoreboard/  The TV screens (Welcome, Split, Podium, Final, Idle, Intermission) plus the
-               costume-vote pieces: VotePrompt (QR + "Scan to vote"), VoteQr, BallotTracker
+               costume-vote pieces: VotePrompt (QR + "Scan to vote"), VoteQr, BallotTracker;
+               and MomentStage, the full-screen "big moments" (Up Next, winner, demerit)
   vote/        VoteBooth
-  decor/       Snowfall, StringLights, Confetti, Bubbles, IntermissionScene (eye candy);
+  decor/       Snowfall, StringLights, Confetti (steady fall), ConfettiBurst (one-shot),
+               Bubbles, IntermissionScene (eye candy);
                seeded.ts is the shared pseudo-random they all use
 
 lib/           Server + shared logic (see §7)
@@ -158,6 +160,21 @@ active & has_started & display_mode:
   `host` header (`lib/vote-url.ts`), so the code always matches the site the TV loaded.
   No env var. On `localhost` it says `localhost` (fine for a dev screenshot, useless
   to a phone, so test a real scan on the deployed site).
+- **Big moments.** While the TV is in scoreboard mode it plays short full-screen beats:
+  **Up Next** (4s) when a game goes live, a **winner card** (8s) when a game completes
+  (for the costume contest this is the reveal of the hidden tally: "The votes are in"),
+  and a **demerit toast** (4.5s). `lib/moments.ts` (`detectMoments`) works out what
+  happened by comparing each scoreboard feed with the last; `useMoments` queues them and
+  plays one at a time; `MomentStage` draws them. The winner card is fed by
+  `lastCompleted` in the feed (the game finished most recently *by completion time*, with
+  its top three; `lib/last-completed.ts`). Rules worth knowing: nothing plays on first load
+  (a refreshed TV replays nothing), nothing across editions, nothing on the podium or
+  final results, reopening a game is not a win, and a backlog (laptop asleep) is capped
+  to the newest few. Order within one poll: winner, demerits, up next. Copy lives in
+  `lib/copy.ts` (`MOMENT_COPY`, `upNextRule`, `DEMERIT_LINES`).
+- **The podium** fades in from the scoreboard (the content is keyed by display mode),
+  plinths rise when revealed, and first place sets off a one-shot `ConfettiBurst`, only
+  when the reveal happens live (a TV that loads onto a revealed podium shows no burst).
 - **Finish & Lock** (`/api/admin/live/finish`) freezes editing and drops the TV to
   `podium` + `podium_state: hidden` (the drumroll) — deliberately NOT the final
   standings, so the host runs the reveal without spoilers.
@@ -171,6 +188,9 @@ The host drives all of this from the **Awards** tab (`components/admin/ClosingCo
 | `scoring.ts` | **The engine.** `computeLeaderboard`, `computeGameRankings`, `applyTieBreakers`, and `computeStandings` (both in one pass). | Pure. Unit-tested. Change scoring rules here only. Each completed game is ranked once and shared. |
 | `scoring-kinds.ts` | Maps the admin's "Count / Timing / Voting" dropdown ↔ stored `score_type`/`score_source`/`score_unit`. | Shared by both game forms. |
 | `scoreboard.ts` | `buildScoreboard()` — shapes the public TV JSON payload. | Used by the page (SSR) and `/api/scoreboard`. |
+| `moments.ts` | `detectMoments(prev, next)` — which big moments (up next, winner, demerit) happened between two scoreboard feeds; plus durations and `capQueue`. | Pure. Unit-tested. The single place that decides what the TV celebrates. |
+| `last-completed.ts` | `pickLastCompleted(games)` + `toSbLastCompleted(game, result)` — the game finished most recently and its podium, for the winner card. | Pure. Unit-tested. By completion time, not sort order. |
+| `format.ts` | `fmtScore(n)` — whole numbers whole, otherwise up to 2 decimals, no float noise. | Shared by the live panel and the winner card. |
 | `standings-diff.ts` | `diffStandings(prev, next)` — who moved, scored, or took a demerit between two looks at the standings. | Pure. Unit-tested. Drives the ▲▼ markers; the "big moments" will reuse it. Returns nothing on first load, and a team's very first ranking isn't a move. |
 | `active-game.ts` | `toSbActiveGame()` — shapes the live game for the TV and **withholds the costume tally while voting is open**. | Pure. Unit-tested. The one place that decides what the TV may see of an open vote. |
 | `vote-url.ts` | `buildVoteUrl(host, proto)` — the address the TV's QR code points at, from the request headers. | Pure. Unit-tested. Rejects anything that isn't a plain `host[:port]`. |
@@ -189,6 +209,7 @@ The host drives all of this from the **Awards** tab (`components/admin/ClosingCo
 | `view-models.ts` | `TeamVM`, `GameVM`, `LibraryGameVM`, `StandingVM` + their `toXxxVM()` mappers. | The one definition of what the server hands client components. Pure, unit-tested. Never ship host-only fields (e.g. game `instructions`). |
 | `hooks/useApi.ts` | Admin mutations: busy/error state, refreshes server data. | `jsonInit(method, body)` builds the request. |
 | `hooks/usePolling.ts` | `usePolling(url, ms, initial)` for the TV scoreboard and vote booth. | Keeps last good data, never stacks requests, pauses while the tab is hidden and refreshes on return. |
+| `hooks/useMoments.ts` | `useMoments(data)` — queues the moments `detectMoments` finds and returns the one to show now. | Compares by value during render; each moment holds the screen for `MOMENT_MS`, then the next plays. |
 | `hooks/useStandingChanges.ts` | `useStandingChanges(standings)` — remembers who just moved for ~20s so the board can show ▲▼. | Compares by value (polling hands back a fresh array every time). Only changes seen *after* mount count, so a refreshed TV shows no phantom moves. |
 | `hooks/useAutoRefresh.ts` | `router.refresh()` on an interval for admin panels. | Also pauses while hidden. |
 

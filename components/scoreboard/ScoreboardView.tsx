@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MotionConfig } from "motion/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { Snowfall } from "@/components/decor/Snowfall";
 import { Confetti } from "@/components/decor/Confetti";
 import { StringLights } from "@/components/decor/StringLights";
@@ -15,6 +15,8 @@ import { FinalResults } from "./FinalResults";
 import { IdleScreen } from "./IdleScreen";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { usePolling } from "@/lib/hooks/usePolling";
+import { useMoments } from "@/lib/hooks/useMoments";
+import { MomentStage } from "./MomentStage";
 import type { ScoreboardPayload } from "@/lib/scoreboard";
 
 export function ScoreboardView({
@@ -29,6 +31,8 @@ export function ScoreboardView({
 }) {
   // Keeps the last good payload on failure so a blip never blanks the TV.
   const { data, tick } = usePolling<ScoreboardPayload>("/api/scoreboard", pollMs, initial);
+  // The "big moment" to play right now (a new game, a winner, a demerit), if any.
+  const moment = useMoments(data);
 
   if (!data.active) {
     return (
@@ -63,31 +67,43 @@ export function ScoreboardView({
         isTest={data.isTest}
       />
 
-      <div className="flex flex-1 flex-col">
-        {mode === "podium" ? (
-          <PodiumStage teams={teams} standings={standings} podiumState={data.podiumState ?? "hidden"} />
-        ) : mode === "final_results" ? (
-          <FinalResults teams={teams} standings={standings} year={data.year} />
-        ) : (
-          <div className="grid flex-1 gap-6 lg:grid-cols-[1.3fr_1fr]">
-            <Panel className="flex flex-col">
-              <StandingsBoard teams={teams} standings={standings} title="Overall Standings" />
-            </Panel>
-            {/* While ballots are open the panel gets a neon tube: the one loud thing on screen. */}
-            <Panel
-              tone="deep"
-              className={cn("flex flex-col", data.activeGame?.votingOpen && "frame-neon")}
-            >
-              <NowPlaying
-                teams={teams}
-                game={data.activeGame ?? null}
-                seed={tick}
-                voteUrl={voteUrl}
-              />
-            </Panel>
-          </div>
-        )}
-      </div>
+      {/* Scoreboard, podium and final results fade into each other rather than cutting. */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={mode}
+          className="flex flex-1 flex-col"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.45 }}
+        >
+          {mode === "podium" ? (
+            <PodiumStage teams={teams} standings={standings} podiumState={data.podiumState ?? "hidden"} />
+          ) : mode === "final_results" ? (
+            <FinalResults teams={teams} standings={standings} year={data.year} />
+          ) : (
+            <div className="grid flex-1 gap-6 lg:grid-cols-[1.3fr_1fr]">
+              <Panel className="flex flex-col">
+                <StandingsBoard teams={teams} standings={standings} title="Overall Standings" />
+              </Panel>
+              {/* While ballots are open the panel gets a neon tube: the one loud thing on screen. */}
+              <Panel
+                tone="deep"
+                className={cn("flex flex-col", data.activeGame?.votingOpen && "frame-neon")}
+              >
+                <NowPlaying
+                  teams={teams}
+                  game={data.activeGame ?? null}
+                  seed={tick}
+                  voteUrl={voteUrl}
+                />
+              </Panel>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      <MomentStage current={moment} teams={teams} />
     </Stage>
   );
 }
@@ -98,7 +114,8 @@ function Stage({ children, confetti = false }: { children: React.ReactNode; conf
     // crop the picture edge; the top clears the string lights.
     <main className="relative flex min-h-dvh flex-col px-[4vw] pb-[3.5vh] pt-14">
       <Snowfall count={28} />
-      {confetti && <Confetti count={80} />}
+      {/* A light, steady fall. The big entrance is the one-shot ConfettiBurst on the podium. */}
+      {confetti && <Confetti count={28} />}
       <StringLights className="pointer-events-none absolute inset-x-0 top-0 opacity-90" />
       {/* "user": anyone who asked their device for less motion gets plain swaps, not slides. */}
       <MotionConfig reducedMotion="user">
